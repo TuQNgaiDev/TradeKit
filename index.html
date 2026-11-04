@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TradeKit · Futures EMA20–50–100</title>
+  <meta name="description" content="Quan sát Binance USDT-M Futures bằng EMA20–50–100 và nến đã đóng. Điều kiện minh bạch, đối chiếu khung lớn.">
+  <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+<header class="appheader">
+  <a class="brand" href="#" aria-label="TradeKit, đầu trang"><span class="brandmark" aria-hidden="true">◈</span> TRADEKIT <span class="product">Futures</span></a>
+  <span class="connection" id="connection" role="status">● Chờ kết nối</span>
+</header>
+<main>
+  <section class="toolbar" aria-label="Chọn hợp đồng và khung thời gian">
+    <form id="search">
+      <label class="sr-only" for="symbol">Hợp đồng vĩnh cửu USDT</label>
+      <div class="searchrow"><input id="symbol" value="SOLUSDT" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="primary" aria-label="Phân tích hợp đồng">Phân tích <span aria-hidden="true">↗</span></button></div>
+    </form>
+    <div class="tabs" id="frames" role="group" aria-label="Khung quan sát">
+      <button data-frame="15m" aria-pressed="false">M15</button>
+      <button data-frame="30m" class="active" aria-pressed="true">M30</button>
+      <button data-frame="1h" aria-pressed="false">H1</button>
+    </div>
+    <button id="refresh" class="refresh" aria-label="Làm mới dữ liệu"><span aria-hidden="true">↻</span> Làm mới</button>
+  </section>
+  <div class="watch"><span class="watch-label">Theo dõi</span><div id="watchlist"></div><button id="save">+ Lưu</button></div>
+  <div id="message" role="status" class="message">Đang chuẩn bị dữ liệu…</div>
+
+  <section class="workspace" aria-label="Biểu đồ và tín hiệu">
+    <article class="panel chartpanel">
+      <div class="panelhead">
+        <div><p class="eyebrow">BINANCE · USDT-M VĨNH CỬU</p><h1 id="pair">SOL / USDT · M30</h1></div>
+        <div class="price"><span>Giá đóng nến</span><strong id="price">—</strong><small id="closed-time">Chưa có dữ liệu</small></div>
+      </div>
+      <div class="chartkey" aria-label="Chú thích chỉ báo"><span class="close-key"><i class="key-dot" aria-hidden="true"></i> Giá đóng</span><div id="ema-values" class="ema-values" aria-label="Giá trị EMA"></div></div>
+      <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="120 nến giao dịch đã đóng và EMA20, EMA50, EMA100"></svg>
+      <div class="quotes">
+        <div class="quote-card"><span><i class="live-dot" aria-hidden="true"></i> Giá giao dịch gần nhất</span><strong id="last-price">—</strong><small id="last-time">Chưa tải</small></div>
+        <div class="quote-card"><span><i class="mark-dot" aria-hidden="true"></i> Mark Price</span><strong id="mark-price">—</strong><small id="mark-time">Chưa tải</small></div>
+      </div>
+      <div class="chartfoot"><span id="range">120 nến gần nhất</span><span>Nguồn: fapi.binance.com</span></div>
+      <p id="updated" class="fine update-line">Chưa cập nhật</p>
+    </article>
+
+    <article class="panel verdict" aria-live="polite">
+      <div class="verdict-top"><p class="eyebrow">TÍN HIỆU HIỆN TẠI</p><span class="signalicon" id="signalicon" aria-hidden="true">—</span></div>
+      <p id="direction" class="direction">Hướng quan sát: —</p>
+      <h2 id="verdict">Chờ dữ liệu</h2>
+      <p id="explanation" class="muted">Kết luận xuất hiện khi có dữ liệu hợp lệ.</p>
+      <section id="indicator-balance" class="indicator-balance" aria-label="Phân bổ hướng của 12 phương pháp và 6 góc nhìn EMA" hidden>
+        <div class="balance-head"><div><strong>Phân bổ xu hướng</strong><small>12 phương pháp + 6 EMA</small></div><span class="balance-total">18 tổng</span></div>
+        <div class="balance-values">
+          <div class="balance-side long-side"><span><i class="balance-dot long-dot"></i>Long</span><strong id="long-percent">0%</strong><small id="long-count">0 trên 18</small></div>
+          <div class="balance-side short-side"><span><i class="balance-dot short-dot"></i>Short</span><strong id="short-percent">0%</strong><small id="short-count">0 trên 18</small></div>
+        </div>
+        <div class="balance-bar" aria-hidden="true"><span id="long-bar"></span><span id="neutral-bar"></span><span id="short-bar"></span></div>
+        <div class="balance-foot"><span id="neutral-count">Chưa rõ · 18/18</span><small>Không phải xác suất thắng</small></div>
+      </section>
+      <div id="reference" class="reference" hidden></div>
+      <div class="comparison-brief"><span class="fieldlabel">Đối chiếu khung lớn</span><p id="comparison">Chưa có dữ liệu</p></div>
+      <p class="fine verdict-note">Chỉ xác nhận bằng nến đã đóng. Mức tham chiếu là giá đóng nến, không phải giá khớp lệnh.</p>
+    </article>
+  </section>
+
+  <section class="disclosures" aria-label="Chi tiết phân tích">
+    <details class="panel disclosure methods-panel" id="methods-panel" open>
+      <summary><span>Hướng theo phương pháp<small>12 phương pháp · tăng, giảm hoặc chưa rõ</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+      <div id="methods" class="methods-grid">Chưa có dữ liệu</div>
+    </details>
+    <details class="panel disclosure conditions-panel" id="conditions-panel" open>
+      <summary><span>Xu hướng EMA<small>6 góc nhìn · chỉ hiển thị tăng, giảm hoặc chưa rõ</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+      <div id="conditions" class="conditiongrid"></div>
+    </details>
+  </section>
+  <footer><span>© TuQNgaiDev - Công cụ chỉ hỗ trợ phân tích thị trường không nên áp dụng để vào lệnh !</span></footer>
+</main>
+<script src="src/js/core.js"></script><script src="src/js/methods.js"></script><script src="src/js/api.js"></script><script src="src/js/app.js"></script>
+</body>
+</html>

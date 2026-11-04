@@ -1,0 +1,32 @@
+# Byte-compiled / Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# Editor & IDE directories
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test outputs & QA artifacts
+qa/
+
+# Packaging and build outputs
+*.zip
+*.zip.sha256
+
+# Virtual environments
+.venv/
+venv/
+env/
+*_env/
