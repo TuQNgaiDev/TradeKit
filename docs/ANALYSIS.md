@@ -1,6 +1,6 @@
 # Các phương pháp phân tích bổ sung
 
-Bổ sung 22 phương pháp trên cùng **nến giao dịch Futures đã đóng** của khung đang xem. Mặc định SOLUSDT/M30; khung chọn M15, M30, H1. Không thêm nguồn dữ liệu hoặc request API. Các phương pháp không thay đổi `CoinCore.evaluate`, không cộng điểm và không tạo lệnh hay xác suất thắng. Giao diện chia thành 4 cụm và chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR và trạng thái trung tính dùng `Chưa rõ` vì không cung cấp hướng.
+Bổ sung 30 phương pháp trên cùng **nến giao dịch Futures đã đóng** của khung đang xem. Mặc định SOLUSDT/M30; khung chọn M15, M30, H1. Không thêm nguồn dữ liệu hoặc request API. Các phương pháp không thay đổi `CoinCore.evaluate`, không tạo lệnh hay xác suất thắng. Tám mô hình 3-EMA mới được diễn giải từ tài liệu người dùng; phần quản trị lệnh, đòn bẩy và tự động hóa trong tài liệu không được áp dụng.
 
 ## Mục đích và tài liệu đối chiếu
 
@@ -191,15 +191,39 @@ RSI14 được đặt vào biên cao–thấp của chính nó trong 14 nến; r
 
 `BP = Close − min(Low, Close trước)`; `TR = max(High, Close trước) − min(Low, Close trước)`. Tỷ lệ tổng BP/TR được tính cho 7, 14 và 28 nến, sau đó `UO = 100×(4×Avg7 + 2×Avg14 + Avg28)/7`. Theo Technical Ratings, trên 70 là tăng, dưới 30 là giảm. Dải phẳng hoàn toàn được quy về 50 trung tính.
 
+## 23–30. Cụm mô hình 3-EMA từ tài liệu người dùng
+
+- **EMA100 Breakout & Retest:** 10 nến cùng phía cũ, nến trước cắt EMA100 với volume tối thiểu 1,5 lần SMA20, nến cuối retest và đóng đúng màu.
+- **HTF Rejection:** biên nến giao EMA50 hoặc EMA100 của khung lớn đã đóng, râu từ chối chiếm ít nhất 50% biên và Close quay về đúng phía EMA20 khung hiện tại.
+- **EMA Squeeze:** khoảng cách EMA20–50 không quá 0,4 ATR, có Inside Bar, nến cuối phá Mother Bar với volume tối thiểu 1,2 lần SMA20.
+- **Hidden Divergence:** hai pivot 5 nến đã xác nhận tạo cấu trúc giá và RSI phân kỳ kín, pivot sau nằm trong 0,3 ATR quanh EMA50/100 và nến cuối đúng màu.
+- **EMA 2B Sweep:** nến trước xuyên EMA50, nến cuối engulfing ngược hướng, đóng trở lại phía kia EMA50 và volume tăng.
+- **Rubber Band:** Close cách EMA20 tối thiểu 3 ATR, RSI ≤25 hoặc ≥75, có Doji/Hammer/Shooting Star và nến cuối phá biên theo hướng hồi quy.
+- **EMA50 Double Test:** hai lần chạm EMA50 cách nhau 3–8 nến; lần hai không xuyên sâu quá 0,2 ATR và đóng đúng màu. Phiên bản hiện tại không xác nhận riêng mức nảy 0,8 ATR nếu chuỗi chạm liên tục.
+- **Trend Surfing:** ADX ≥30 và đang tăng, độ dốc EMA20 ba nến tối thiểu 1,5 ATR, nến trước retest nông EMA20 và nến cuối phá biên.
+
+P1 Value Zone Pullback của tài liệu trùng quy tắc EMA chính nên không được đếm thêm. Các mô hình trên chỉ trả tăng/giảm/chưa rõ; không tự đặt Entry, SL, TP, position size, đòn bẩy, pyramiding hay webhook.
+
+## Kịch bản giá tham khảo
+
+Khi hướng EMA hiện tại khác 0, giao diện hiển thị một kịch bản kỹ thuật thay cho thông báo đối chiếu khung lớn:
+
+- Hướng tăng: `Vô hiệu = min(Low của 4 nến cuối, EMA50) − 0,5×ATR14`.
+- Hướng giảm: `Vô hiệu = max(High của 4 nến cuối, EMA50) + 0,5×ATR14`.
+- `R = khoảng cách có hướng từ giá đóng nến cuối tới mức vô hiệu`.
+- `TP1 = Giá đóng ± 1,3R`; `TP2 = Giá đóng ± 2,2R` theo hướng quan sát.
+
+Nếu ATR không hợp lệ, hướng chưa rõ hoặc mức vô hiệu tạo `R ≤ 0`, khối này không hiển thị. Các mức không được lưu như lệnh và không dùng ticker hay Mark Price làm giá tham chiếu.
+
 ## Đồng thuận M15–M30–H1
 
-Với từng khung, hệ thống tính hướng EMA bằng đúng thứ tự EMA20–50–100 và độ dốc 3 nến. Đồng thời đếm hướng của 22 phương pháp trên chính 500 nến đã đóng của khung đó. Khung chỉ được gắn tăng/giảm khi hướng EMA khác 0 và trùng với dấu của `(số tăng − số giảm)`. Kết quả chung là tăng hoặc giảm khi ít nhất 2 trong 3 khung cùng hướng; nếu không thì `Chưa đồng thuận`.
+Với từng khung, hệ thống tính hướng EMA bằng đúng thứ tự EMA20–50–100 và độ dốc 3 nến. Đồng thời đếm hướng của 30 phương pháp trên chính 500 nến đã đóng của khung đó. Khung chỉ được gắn tăng/giảm khi hướng EMA khác 0 và trùng với dấu của `(số tăng − số giảm)`. Kết quả chung là tăng hoặc giảm khi ít nhất 2 trong 3 khung cùng hướng; nếu không thì `Chưa đồng thuận`.
 
 Lớp này tái sử dụng dữ liệu M15, M30 và H1 đã tải, không thêm request. Nó không sửa `CoinCore.evaluate`, không biến tín hiệu cũ thành tín hiệu mới và không thay thế yêu cầu khung lớn của xác nhận EMA chính.
 
 ## Giao diện và quan hệ với tín hiệu chính
 
-Hai mươi hai thẻ nằm trong mục **Hướng theo phương pháp**, mở sẵn và chia thành bốn cụm: xu hướng/cấu trúc, động lượng, dòng tiền/khối lượng và biến động. Mỗi thẻ chỉ hiển thị tên và tag tăng/giảm/chưa rõ; công thức, quy tắc và giới hạn được giữ trong tài liệu này. Biểu đồ vẫn chỉ vẽ giá đóng và EMA20–50–100 để tránh quá tải.
+Ba mươi thẻ nằm trong mục **Hướng theo phương pháp**, mở sẵn và chia thành năm cụm: xu hướng/cấu trúc, động lượng, dòng tiền/khối lượng, biến động và mô hình 3-EMA. Mỗi thẻ chỉ hiển thị tên và tag tăng/giảm/chưa rõ. Biểu đồ vẫn chỉ vẽ giá đóng và EMA20–50–100 để tránh quá tải.
 
 Các phương pháp có thể mâu thuẫn và không phải các phiếu độc lập: nhiều công thức dùng lại cùng giá đóng. Không tổng hợp số phương pháp cùng chiều thành độ tin cậy, xác suất thắng hoặc tín hiệu thay thế. Lỗi/cũ dữ liệu, đổi coin/khung đều xóa phần bổ sung cùng kết quả chính.
 

@@ -30,16 +30,16 @@ function clearCurrent(){
   lastSuccess=0;validatedSymbol=null;chartData=null;
   ['price','last-price','mark-price'].forEach(id=>$(id).textContent='—');
   ['closed-time','last-time','mark-time','updated'].forEach(id=>$(id).textContent='Chưa có dữ liệu');
-  $('verdict').textContent='Thiếu dữ liệu';$('verdict').className='';$('direction').textContent='Hướng quan sát: —';$('direction').className='direction';$('signalicon').textContent='—';$('signalicon').className='signalicon';
-  $('explanation').textContent='Cần dữ liệu hợp lệ để đánh giá.';$('reference').hidden=true;$('reference').replaceChildren();
+  $('verdict').textContent='Chờ dữ liệu';$('verdict').className='';$('direction').textContent='Hướng quan sát: —';$('direction').className='direction';$('signalicon').textContent='—';$('signalicon').className='signalicon';
+  $('explanation').textContent='Cần dữ liệu hợp lệ để đánh giá.';$('trade-plan').hidden=true;['plan-entry','plan-stop','plan-tp1','plan-tp2'].forEach(id=>$(id).textContent='—');
   $('indicator-balance').hidden=true;['long-bar','neutral-bar','short-bar'].forEach(id=>$(id).style.width='0%');
   $('timeframe-confluence').hidden=true;$('confluence-frames').replaceChildren();$('confluence-state').textContent='— Chưa rõ';$('confluence-state').className='status miss';
   ['conditions','ema-values'].forEach(id=>$(id).replaceChildren());$('chart').replaceChildren();$('methods').textContent='Chưa có dữ liệu';
-  $('comparison').textContent='Chưa có dữ liệu';$('range').textContent='120 nến gần nhất';
+  $('range').textContent='120 nến gần nhất';
 }
 function draw(data){
-  chartData=data;const narrow=window.innerWidth<=650,edge=narrow?400:780;
-  $('chart').setAttribute('viewBox',narrow?'0 0 520 330':'0 0 900 330');
+  chartData=data;const narrow=window.innerWidth<=650,viewWidth=narrow?520:900,edge=viewWidth-(narrow?54:48);
+  $('chart').setAttribute('viewBox','0 0 '+viewWidth+' 330');
   const lines=[data.closes,data.e20,data.e50,data.e100].map((a,k)=>({values:a.slice(-120),color:['#77e2b8','#e0bb70','#7da9ec','#b79beb'][k],width:k?1.8:2.6,extra:false}));
   const values=lines.flatMap(l=>l.values).filter(Number.isFinite),min=Math.min(...values),max=Math.max(...values),pad=(max-min)*.12||max*.01||1,lo=min-pad,hi=max+pad;
   const x=i=>12+i*(edge-20)/119,y=v=>290-(v-lo)/(hi-lo)*270;
@@ -76,8 +76,8 @@ function emaDirections(result){
   const d=result.direction;
   return [result.order,result.slope,d,result.pullbackIndex!==null?d:0,result.candidate?d:0,result.other?.direction||0];
 }
-function renderMethods(data,extra,ema){
-  const cards=CoinMethods.summarize(data.rows,extra);
+function renderMethods(data,extra,ema,higher){
+  const cards=CoinMethods.summarize(data.rows,extra,{higher});
   const directions=[...cards.map(card=>card.direction),...ema],total=directions.length,long=directions.filter(direction=>direction===1).length,short=directions.filter(direction=>direction===-1).length,neutral=total-long-short;
   const percent=value=>total?Math.round(value/total*100):0,longPct=percent(long),shortPct=percent(short),neutralPct=100-longPct-shortPct;
   const balance=$('indicator-balance');balance.hidden=false;balance.dataset.total=String(total);balance.dataset.long=String(long);balance.dataset.short=String(short);balance.dataset.neutral=String(neutral);
@@ -102,11 +102,16 @@ function emaTrendItem(title,direction){
   head.append(node('h3',title),node('span',label,'status '+(direction===1?'bull':direction===-1?'bear':'miss')));
   el.append(head);$('conditions').append(el);
 }
+function renderTradePlan(data,direction){
+  const plan=CoinMethods.riskPlan(data.rows,data.methods,direction);if(!plan){$('trade-plan').hidden=true;return;}
+  $('plan-side').textContent=direction===1?'Kịch bản theo xu hướng tăng':'Kịch bản theo xu hướng giảm';
+  $('plan-entry').textContent=fmt(plan.entry);$('plan-stop').textContent=fmt(plan.stop);$('plan-tp1').textContent=fmt(plan.tp1);$('plan-tp2').textContent=fmt(plan.tp2);$('trade-plan').hidden=false;
+}
 function renderConfluence(results){
   const trendLabel=value=>value===1?'Tăng':value===-1?'Giảm':'Chưa rõ';
   const frames=C.TRADE_FRAMES.map(tf=>{
     const item=results[C.DATA_FRAMES.indexOf(tf)];if(item.status!=='fulfilled')return {tf,direction:0,error:true,long:0,short:0,total:0};
-    const data=item.value,cards=CoinMethods.summarize(data.rows,CoinMethods.calculate(data.rows)),directions=cards.map(card=>card.direction),long=directions.filter(v=>v===1).length,short=directions.filter(v=>v===-1).length,methodDirection=Math.sign(long-short),ema=C.trendAt(data,data.rows.length-1).direction;
+    const data=item.value,higherItem=results[C.DATA_FRAMES.indexOf(C.HIGHER[tf])],higher=higherItem?.status==='fulfilled'?higherItem.value:null,cards=CoinMethods.summarize(data.rows,CoinMethods.calculate(data.rows),{higher}),directions=cards.map(card=>card.direction),long=directions.filter(v=>v===1).length,short=directions.filter(v=>v===-1).length,methodDirection=Math.sign(long-short),ema=C.trendAt(data,data.rows.length-1).direction;
     return {tf,long,short,total:cards.length,ema,direction:ema!==0&&ema===methodDirection?ema:0,error:false};
   });
   const long=frames.filter(v=>v.direction===1).length,short=frames.filter(v=>v.direction===-1).length,direction=long>=2?1:short>=2?-1:0,state=$('confluence-state');
@@ -118,16 +123,14 @@ function renderConfluence(results){
 }
 function render(data,comparison,result,snapshot,results){
   const i=data.rows.length-1,r=data.rows[i],d=result.direction;
-  const ema=emaDirections(result);data.methods=CoinMethods.calculate(data.rows);renderMethods(data,data.methods,ema);
+  const ema=emaDirections(result);data.methods=CoinMethods.calculate(data.rows);renderMethods(data,data.methods,ema,comparison);
   $('price').textContent=fmt(r.close)+' USDT';$('closed-time').textContent='Nến đóng: '+date(r.closeTime);
-  $('direction').textContent='Hướng quan sát: '+dir(d);$('direction').className='direction '+(d===1?'bull':d===-1?'bear':'');$('verdict').textContent=result.status;
-  $('verdict').className=result.current?(d===1?'bull':'bear'):'';$('signalicon').textContent=d===1?'↗':d===-1?'↘':'↔';$('signalicon').className='signalicon '+(d===1?'bull':d===-1?'bear':'');
-  $('explanation').textContent=result.reason;
-  if(result.signal){$('reference').hidden=false;$('reference').append(node('strong','Mức tham chiếu: '+fmt(result.signal.price)+' USDT'),node('p','Nến phát tín hiệu: '+date(result.signal.time)),node('small','Xác nhận hiện tại: nến đã đóng gần nhất.'));}
+  $('direction').textContent='Hướng quan sát: '+dir(d);$('direction').className='direction '+(d===1?'bull':d===-1?'bear':'');$('verdict').textContent=d===1?'Xu hướng tăng':d===-1?'Xu hướng giảm':'Chưa có xu hướng rõ';
+  $('verdict').className=d===1?'bull':d===-1?'bear':'';$('signalicon').textContent=d===1?'↗':d===-1?'↘':'↔';$('signalicon').className='signalicon '+(d===1?'bull':d===-1?'bear':'');
+  $('explanation').textContent=result.current?'Nến đã đóng gần nhất đã xác nhận theo bộ quy tắc EMA.':d===1?'EMA20–50–100 và độ dốc đang ủng hộ hướng tăng; theo dõi nhịp hồi và nến xác nhận.':d===-1?'EMA20–50–100 và độ dốc đang ủng hộ hướng giảm; theo dõi nhịp hồi và nến xác nhận.':'Thứ tự EMA và độ dốc chưa cùng hướng; ưu tiên chờ cấu trúc rõ hơn.';
   $('ema-values').replaceChildren(...[['EMA20',data.e20[i],'gold'],['EMA50',data.e50[i],'blue'],['EMA100',data.e100[i],'purple']].map(([name,value,color])=>node('span',name+' · '+fmt(value),color)));
   ['01 · Thứ tự EMA','02 · Độ dốc 3 nến','03 · EMA đồng hướng','04 · Hồi theo EMA','05 · Nến xác nhận','06 · Khung lớn'].forEach((title,index)=>emaTrendItem(title,ema[index]));
-  const tf=C.HIGHER[frame];
-  $('comparison').textContent=(frame==='1d'?'4h tham khảo: ':C.LABELS[frame]+' → '+C.LABELS[tf]+': ')+(comparison?dir(result.other.direction)+(result.aligned?' · Cùng hướng.':' · Chưa đồng hướng.'):'Không tải được; không xác nhận.')+(frame==='1d'?' Không có xác nhận từ khung lớn hơn.':'');
+  renderTradePlan(data,d);
   $('updated').textContent='Cập nhật: '+date(Date.now())+' · Máy chủ Binance: '+date(snapshot.serverTime)+' · '+data.rows.length+' nến đã đóng';
   renderConfluence(results);
   draw(data);
@@ -163,11 +166,11 @@ async function run(){
     const partial=results.slice(0,4).some(x=>x.status==='rejected')||!lastOK||!markOK;
     $('connection').textContent=partial?'● Kết nối một phần':'● Đã cập nhật Futures';
     $('message').textContent=partial?'Một số dữ liệu chưa tải được hoặc đã cũ; xem trạng thái từng mục.':'';
-    const item={symbol:selectedSymbol,frame:selectedFrame,label:result.status,time:Date.now(),closeTime:main.value.rows.at(-1).closeTime,signalTime:result.signal?.time??null,reference:result.signal?.price??null};
+    const item={symbol:selectedSymbol,frame:selectedFrame,label:result.direction===1?'Xu hướng tăng':result.direction===-1?'Xu hướng giảm':'Chưa rõ',time:Date.now(),closeTime:main.value.rows.at(-1).closeTime,signalTime:result.signal?.time??null,reference:result.signal?.price??null};
     if(!history[0]||['symbol','frame','label','closeTime'].some(k=>history[0][k]!==item[k])){history.unshift(item);history=history.slice(0,20);write(HISTORY,history);}
     renderHistory();
   }catch(e){
-    if(!isCurrent())return;clearCurrent();$('verdict').textContent='Thiếu dữ liệu';$('connection').textContent='● Chưa có dữ liệu hợp lệ';
+    if(!isCurrent())return;clearCurrent();$('verdict').textContent='Chờ dữ liệu';$('connection').textContent='● Chưa có dữ liệu hợp lệ';
     $('message').textContent=e.message+' Không dùng dữ liệu Spot thay thế, không tạo dữ liệu giả.';
   }finally{if(isCurrent())loading=false;}
 }
@@ -179,7 +182,7 @@ $('save').onclick=()=>{
 };
 setInterval(()=>{if(!document.hidden&&!loading)run();},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!loading)run();});
-setInterval(()=>{if(lastSuccess&&performance.now()-lastSuccess>180000){clearCurrent();$('connection').textContent='● Dữ liệu đã cũ';$('verdict').textContent='Thiếu dữ liệu';$('message').textContent='Bản tải đã quá 3 phút. Làm mới để đánh giá lại; xác nhận trước đã hết hiệu lực.';}},5000);
+setInterval(()=>{if(lastSuccess&&performance.now()-lastSuccess>180000){clearCurrent();$('connection').textContent='● Dữ liệu đã cũ';$('verdict').textContent='Chờ dữ liệu mới';$('message').textContent='Bản tải đã quá 3 phút. Làm mới để đánh giá lại; xác nhận trước đã hết hiệu lực.';}},5000);
 renderWatch();renderHistory();run();
 
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(chartData)draw(chartData);},80);});

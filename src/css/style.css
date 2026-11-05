@@ -23,13 +23,13 @@ form,.searchrow{min-width:0}.searchrow{display:flex;gap:8px}.searchrow input{wid
 svg{display:block;width:100%;height:auto;margin:10px 0 16px;border-radius:8px}.quotes{display:grid;grid-template-columns:1fr 1fr;border:0;padding:0;gap:12px;margin-top:10px}.quote-card{background:#0d1419;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:3px}.quote-card span{display:flex;align-items:center;gap:6px;font-size:10px;color:#728492;text-transform:uppercase;letter-spacing:.6px;font-weight:600}.live-dot{width:6px;height:6px;border-radius:50%;background:#77e2b8;box-shadow:0 0 6px #77e2b8}.mark-dot{width:6px;height:6px;border-radius:50%;background:#7da9ec;box-shadow:0 0 6px #7da9ec}.quote-card strong{display:block;font-size:15px;font-weight:650;color:#eef4f8;margin:2px 0 1px;letter-spacing:-.3px;font-variant-numeric:tabular-nums}.quote-card small{display:block;font-size:10px;color:#586976;line-height:1.5;font-variant-numeric:tabular-nums}
 .chartfoot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:10px;color:#5c6d7b;margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.04);line-height:1.6}.fine{font-size:10px;line-height:1.8;color:var(--muted)}.update-line{font-size:10px;color:#52626f;margin:5px 0 0}
 .verdict{display:flex;flex-direction:column;padding:24px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,.18)}.verdict-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}.verdict-top .eyebrow{margin:0}.signalicon{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:#182229;border:1px solid rgba(255,255,255,.08);color:#728492;font-size:19px;line-height:1;transition:all .2s ease}.signalicon.bull{background:rgba(119,226,184,.15);border-color:rgba(119,226,184,.4);color:#77e2b8;box-shadow:0 0 14px rgba(119,226,184,.25)}.signalicon.bear{background:rgba(240,156,156,.15);border-color:rgba(240,156,156,.4);color:#f09c9c;box-shadow:0 0 14px rgba(240,156,156,.25)}.direction{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#728492;margin:0 0 8px}.direction.bull{color:#77e2b8}.direction.bear{color:#f09c9c}.muted{font-size:12px;line-height:1.7;color:#7f919e;margin:0 0 18px}.bull{color:#77e2b8}.bear{color:#f09c9c}
-.reference{padding:12px 14px;margin:0 0 16px;border:1px solid rgba(119,226,184,.3);border-radius:8px;background:rgba(119,226,184,.08);line-height:1.7}.reference[hidden]{display:none}.reference strong{font-size:13px;font-weight:600;color:#77e2b8}.reference p{font-size:11px;margin:5px 0}.reference small{color:#97b8aa;font-size:10px}.comparison-brief{border-top:1px solid rgba(255,255,255,.05);padding-top:14px;margin-top:14px}.fieldlabel{display:block;color:#6e808e;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}.comparison-brief p{font-size:12px;font-weight:550;color:#c4d4e0;line-height:1.6;margin:5px 0 0}.verdict-note{border-top:1px solid rgba(255,255,255,.05);padding-top:12px;margin:14px 0 0;font-size:10px;color:#52626f;line-height:1.6}
+.trade-plan{padding:13px;margin:0 0 14px;border:1px solid #31414a;border-radius:9px;background:#0e151a}.trade-plan[hidden]{display:none}.plan-head{display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:10px}.plan-head strong{display:block;font-size:12px}.plan-head small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.plan-badge{padding:3px 6px;border:1px solid #3b4c56;border-radius:999px;color:#9fb1bd;font-size:8px}.plan-levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.plan-levels>div{padding:9px;border:1px solid var(--border);border-radius:6px;background:#11191e}.plan-levels span{display:block;color:var(--muted);font-size:8px}.plan-levels strong{display:block;margin-top:4px;font-size:14px;font-variant-numeric:tabular-nums}.plan-levels .risk-level strong{color:#f09c9c}.trade-plan>.fine{margin:9px 0 0;font-size:8px;line-height:1.55}.verdict-note{border-top:1px solid rgba(255,255,255,.05);padding-top:12px;margin:14px 0 0;font-size:10px;color:#52626f;line-height:1.6}
 .disclosures{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}.disclosure{padding:0 18px}.disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;list-style:none;cursor:pointer;font-size:12px;font-weight:550;line-height:1.7}.disclosure>summary::-webkit-details-marker{display:none}.disclosure summary small{display:block;color:var(--muted);font-size:10px;font-weight:400;margin-top:2px}.disclosure-icon{color:var(--muted);font-size:20px;font-weight:400;line-height:1;flex-shrink:0}.disclosure[open] .disclosure-icon{transform:rotate(45deg);color:var(--accent)}.disclosure[open]>summary{border-bottom:1px solid var(--border);margin-bottom:16px}
 .conditiongrid{display:grid;gap:15px;margin:0 0 18px}.condition{border-bottom:1px solid var(--border);padding-bottom:14px}.condition:last-child{border:0;padding:0}.condition h3{font-size:12px;margin:5px 0;font-weight:550}.condition p{font-size:11px;color:var(--muted);line-height:1.8;margin:0}.status{font-size:10px;color:var(--muted)}.status.bull{color:var(--accent)}
 .historyrow{padding:10px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:4px;font-size:11px;line-height:1.8}.historyrow:last-child{border:0}.historyrow>span+span{font-size:10px;color:var(--muted)}#history{max-height:320px;overflow:auto;font-size:11px;color:var(--muted);line-height:1.8;overscroll-behavior:contain}
 footer{display:flex;justify-content:center;text-align:center;gap:12px;padding:26px 0 36px;font-size:11px;color:var(--muted);line-height:1.7}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:950px){.appheader{padding-inline:22px}main{padding-inline:22px}.toolbar{gap:12px}.workspace{grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr)}.chartpanel,.verdict{padding:18px}.panelhead{flex-direction:column;gap:16px}.price{text-align:left}.price strong{font-size:26px}.verdict-top{margin-bottom:18px}}
-@media(max-width:650px){.appheader{min-height:62px;padding:0 16px;gap:12px}.brand{font-size:12px;letter-spacing:1px;gap:7px}.brandmark{font-size:24px}.product{display:none}.connection{font-size:10px;max-width:48%}main{padding:0 12px}.toolbar{flex-wrap:wrap;gap:12px;padding:12px}.toolbar form{width:100%}.searchrow input{flex:1;width:0}.primary{padding-inline:16px}.tabs{flex:1}.tabs button{flex:1;min-width:45px;min-height:38px}.refresh{min-height:44px;padding:9px 12px}.watch{flex-wrap:wrap;gap:7px;margin-top:11px}.watch-label{font-size:10px}.watch>div{gap:5px}.watch button{min-height:34px}.message{font-size:10px;padding:10px 2px;min-height:36px}.workspace{display:flex;flex-direction:column;gap:12px}.verdict{order:-1;padding:16px}.verdict-top{margin-bottom:6px}.direction{margin:0 0 6px;font-size:11px}.verdict h2{font-size:21px;line-height:1.35}.signalicon{width:26px;height:26px;font-size:20px}.muted{font-size:12px;margin:8px 0 12px;line-height:1.7}.comparison-brief{padding-top:10px;margin-top:0}.comparison-brief p{font-size:11px;margin:3px 0 0}.verdict-note{margin-top:10px;padding-top:10px;font-size:9px}.reference{margin-bottom:12px}.chartpanel{padding:16px}.panelhead{flex-direction:row;gap:12px;align-items:start}h1{font-size:18px}.panelhead .eyebrow{font-size:8px;letter-spacing:.8px}.price{text-align:right;max-width:52%}.price>span{font-size:9px}.price strong{font-size:20px;letter-spacing:-.6px}.price small{font-size:9px;line-height:1.6}.chartkey{margin-top:18px;gap:10px;font-size:10px}.ema-values{gap:9px;font-size:10px}.ema-values span{white-space:nowrap}svg{margin:10px 0 12px}.quotes{gap:10px}.quotes>div+div{padding-left:11px}.quotes strong{font-size:13px}.quotes small,.quotes span{font-size:9px}.chartfoot,.update-line{font-size:9px}.disclosures{grid-template-columns:1fr;gap:9px;margin-top:12px}.disclosure{padding-inline:16px}.disclosure>summary{padding:14px 0;min-height:66px}footer{flex-direction:column;gap:2px;padding:20px 4px;font-size:10px;text-align:center;align-items:center}}
+@media(max-width:650px){.appheader{min-height:62px;padding:0 16px;gap:12px}.brand{font-size:12px;letter-spacing:1px;gap:7px}.brandmark{font-size:24px}.product{display:none}.connection{font-size:10px;max-width:48%}main{padding:0 12px}.toolbar{flex-wrap:wrap;gap:12px;padding:12px}.toolbar form{width:100%}.searchrow input{flex:1;width:0}.primary{padding-inline:16px}.tabs{flex:1}.tabs button{flex:1;min-width:45px;min-height:38px}.refresh{min-height:44px;padding:9px 12px}.watch{flex-wrap:wrap;gap:7px;margin-top:11px}.watch-label{font-size:10px}.watch>div{gap:5px}.watch button{min-height:34px}.message{font-size:10px;padding:10px 2px;min-height:36px}.workspace{display:flex;flex-direction:column;gap:12px}.verdict{order:-1;padding:16px}.verdict-top{margin-bottom:6px}.direction{margin:0 0 6px;font-size:11px}.verdict h2{font-size:21px;line-height:1.35}.signalicon{width:26px;height:26px;font-size:20px}.muted{font-size:12px;margin:8px 0 12px;line-height:1.7}.verdict-note{margin-top:10px;padding-top:10px;font-size:9px}.trade-plan{margin-bottom:12px}.chartpanel{padding:16px}.panelhead{flex-direction:row;gap:12px;align-items:start}h1{font-size:18px}.panelhead .eyebrow{font-size:8px;letter-spacing:.8px}.price{text-align:right;max-width:52%}.price>span{font-size:9px}.price strong{font-size:20px;letter-spacing:-.6px}.price small{font-size:9px;line-height:1.6}.chartkey{margin-top:18px;gap:10px;font-size:10px}.ema-values{gap:9px;font-size:10px}.ema-values span{white-space:nowrap}svg{margin:10px 0 12px}.quotes{gap:10px}.quotes>div+div{padding-left:11px}.quotes strong{font-size:13px}.quotes small,.quotes span{font-size:9px}.chartfoot,.update-line{font-size:9px}.disclosures{grid-template-columns:1fr;gap:9px;margin-top:12px}.disclosure{padding-inline:16px}.disclosure>summary{padding:14px 0;min-height:66px}footer{flex-direction:column;gap:2px;padding:20px 4px;font-size:10px;text-align:center;align-items:center}}
 @media(max-width:360px){.panelhead{flex-direction:column;gap:12px}.price{text-align:left;max-width:100%}.price strong{font-size:23px}.toolbar{gap:9px}.refresh{font-size:11px;padding-inline:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 /* Supplemental methods remain in one collapsed section. */
@@ -39,11 +39,11 @@ footer{display:flex;justify-content:center;text-align:center;gap:12px;padding:26
 
 /* Readability pass: larger type without restoring oversized cards. */
 .connection,.watch-label,.watch button,.message,.direction{font-size:12px}
-.eyebrow{font-size:10px}.price>span,.price small,.chartkey,.ema-values,.quotes span,.quotes small,.fieldlabel{font-size:11px}
+.eyebrow{font-size:10px}.price>span,.price small,.chartkey,.ema-values,.quotes span,.quotes small{font-size:11px}
 .quotes strong{font-size:15px}.chartfoot,.update-line{font-size:10px}.fine{font-size:11px}
-.muted,.comparison-brief p{font-size:13px}
-.reference p,.condition p,.historyrow,#history{font-size:12px}
-.reference small,.status,.historyrow>span+span,footer{font-size:11px}
+.muted{font-size:13px}
+.condition p,.historyrow,#history{font-size:12px}
+.status,.historyrow>span+span,footer{font-size:11px}
 .disclosure>summary{font-size:13px}.disclosure summary small{font-size:11px}
 .methods-intro p{font-size:9px}.method-heading h3{font-size:10px}.method-preview{font-size:9px}.method-preview strong{font-size:12px}
 .method-card[open] .method-state{font-size:9px}.method-metrics,.method-reading,.method-rule,.method-relation{font-size:12px}.method-detail>a{font-size:11px}
@@ -79,7 +79,7 @@ footer{display:flex;justify-content:center;text-align:center;gap:12px;padding:26
   .connection,.watch-label,.message{font-size:11px}.watch button{font-size:12px}
   .panelhead .eyebrow{font-size:9px}.price>span,.price small,.quotes span,.quotes small,.chartfoot,.update-line{font-size:10px}
   .chartkey,.ema-values{font-size:11px}.quotes strong{font-size:14px}.verdict-note{font-size:10px}
-  .comparison-brief p{font-size:12px}.disclosure>summary{font-size:13px}.disclosure summary small{font-size:11px}
+  .disclosure>summary{font-size:13px}.disclosure summary small{font-size:11px}
   .methods-intro p{font-size:8px}.method-heading h3{font-size:10px}.method-preview{font-size:9px}.method-preview strong{font-size:12px}
   .method-state,.method-card[open] .method-state{font-size:7px;padding:2px 3px}
   .conditions-panel{grid-column:auto}.conditiongrid{grid-template-columns:1fr;gap:6px}
@@ -150,4 +150,32 @@ footer{display:flex;justify-content:center;text-align:center;gap:12px;padding:26
   .method-groups{grid-template-columns:1fr;gap:7px;margin:9px 0}
   .method-group{padding:8px}.method-group-head h3{font-size:11px}.method-group .methods-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .timeframe-confluence{padding:10px}.confluence-frames{gap:4px}.confluence-card{padding:7px 6px}.confluence-card>div{display:block}.confluence-card .status{display:inline-block;margin-top:3px;font-size:8px}.confluence-card small{font-size:8px}
+}
+
+/* Keep the chart and signal summary visually balanced on wide screens. */
+@media(min-width:951px){
+  .workspace{align-items:stretch}
+  .chartpanel,.verdict{align-self:stretch}
+  .verdict{padding:20px}
+  .verdict-top{margin-bottom:10px}
+  .direction{margin-bottom:5px}
+  .verdict h2{margin-bottom:6px}
+  .verdict .muted{margin-bottom:12px;line-height:1.55}
+  .indicator-balance{margin-bottom:10px;padding:11px}
+  .balance-head{margin-bottom:8px}
+  .balance-values{gap:6px;margin-bottom:8px}
+  .balance-side{padding:8px}
+  .balance-side>strong{font-size:19px}
+  .balance-foot{margin-top:6px}
+  .timeframe-confluence{margin-bottom:10px;padding:10px}
+  .confluence-head{margin-bottom:7px}
+  .confluence-card{padding:6px}
+  .timeframe-confluence>.fine{margin-top:6px}
+  .trade-plan{margin-bottom:10px;padding:10px}
+  .plan-head{margin-bottom:8px}
+  .plan-levels{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .plan-levels>div{padding:7px 6px}
+  .plan-levels strong{font-size:13px}
+  .trade-plan>.fine{margin-top:7px}
+  .verdict-note{margin-top:auto;padding-top:10px}
 }

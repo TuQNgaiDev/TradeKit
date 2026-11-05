@@ -12,9 +12,9 @@ Mở http://localhost:8080. Tải lại trang nếu trình duyệt còn giữ ph
 
 ## Giao diện tinh gọn
 
-Thanh chọn coin và M15/M30/H1 ở đầu trang, mặc định SOLUSDT/M30. Màn hình chính tập trung vào biểu đồ, giá đóng, ba EMA và tín hiệu kèm kết quả đối chiếu. Trên điện thoại, tín hiệu nằm trước biểu đồ. Thẻ tín hiệu hiển thị tỷ lệ Long/Short/Chưa rõ trên tổng 28 góc nhìn gồm 22 phương pháp và 6 mục EMA; đây là phân bổ hướng, không phải xác suất thắng và không đổi kết luận EMA. Các phương pháp được chia thành 4 cụm: xu hướng/cấu trúc, động lượng, dòng tiền/khối lượng và biến động. Mỗi ô chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR luôn `Chưa rõ` vì không chỉ hướng.
+Thanh chọn coin và M15/M30/H1 ở đầu trang, mặc định SOLUSDT/M30. Màn hình chính tập trung vào biểu đồ, giá đóng, ba EMA và tín hiệu kèm kết quả đối chiếu. Trên điện thoại, tín hiệu nằm trước biểu đồ. Thẻ tín hiệu hiển thị tỷ lệ Long/Short/Chưa rõ trên tổng 36 góc nhìn gồm 30 phương pháp và 6 mục EMA; đây là phân bổ hướng, không phải xác suất thắng và không đổi kết luận EMA. Các phương pháp được chia thành 5 cụm, trong đó cụm **Mô hình 3-EMA** chứa 8 mẫu hình từ tài liệu người dùng. Mỗi ô chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR luôn `Chưa rõ` vì không chỉ hướng.
 
-Khối **Đồng thuận 3 khung** dùng M15, M30 và H1 đã đóng. Một khung chỉ có hướng khi EMA20–50–100/độ dốc của khung đó cùng phía với đa số 22 phương pháp. Kết quả chung cần ít nhất 2/3 khung cùng hướng; 3/3 được ghi rõ. Đây chỉ là bộ lọc bổ trợ và không thay thế điều kiện xác nhận EMA/khung lớn của tín hiệu chính.
+Khối **Đồng thuận 3 khung** dùng M15, M30 và H1 đã đóng. Một khung chỉ có hướng khi EMA20–50–100/độ dốc của khung đó cùng phía với đa số 30 phương pháp. Kết quả chung cần ít nhất 2/3 khung cùng hướng; 3/3 được ghi rõ. Đây chỉ là bộ lọc bổ trợ và không thay thế điều kiện xác nhận EMA/khung lớn của tín hiệu chính.
 
 ## Cấu trúc thư mục
 
@@ -30,15 +30,15 @@ TradeKit/
 │   └── js/
 │       ├── core.js         # Thuật toán EMA, kiểm tra/loại nến mở, quy tắc tín hiệu thuần
 │       ├── api.js          # API Futures công khai, timeout, cache, giới hạn yêu cầu
-│       ├── methods.js      # 22 phương pháp kỹ thuật, phân thành 4 cụm
+│       ├── methods.js      # 30 phương pháp kỹ thuật, phân thành 5 cụm
 │       └── app.js          # Kết nối dữ liệu với giao diện, biểu đồ SVG, làm mới, lưu trữ
 │
 ├── docs/                   # Tài liệu kỹ thuật chi tiết
-│   └── ANALYSIS.md         # Công thức, seed, tài liệu tham khảo và giới hạn 22 phương pháp
+│   └── ANALYSIS.md         # Công thức, seed, tài liệu tham khảo và giới hạn 30 phương pháp
 │
 └── tests/                  # Bộ kiểm thử mô phỏng và kiểm tra kết nối
     ├── index.html          # Test runner kiểm thử mô phỏng trên trình duyệt
-    ├── unit.js             # 46 ca kiểm thử thuật toán và API client thuần
+    ├── unit.js             # 48 ca kiểm thử thuật toán và API client thuần
     ├── browser.py          # Kiểm thử trình duyệt tự động qua Playwright
     └── live_api.py         # Kiểm tra kết nối trực tiếp đến Binance Futures API
 ```
@@ -96,13 +96,17 @@ Các trạng thái:
 - **Có xu hướng — chờ hồi**: xu hướng hợp lệ, chưa có lần hồi trong cửa sổ.
 - **Đã hồi — chờ nến xác nhận**: có hồi nhưng chưa có nến đúng màu đóng vượt EMA20; lần chạm tại t được ghi nhận để chờ nến sau.
 - **Có xác nhận Long/Short**: chỉ nến đóng gần nhất t đủ tất cả điều kiện, gồm khung lớn hơn.
-- **Thiếu dữ liệu hoặc khung thời gian trái chiều**: có hướng quan sát nhưng không đủ đồng thuận khung đối chiếu hoặc thiếu khung đối chiếu. Chi tiết từng điều kiện giải thích nguyên nhân. Lỗi dữ liệu chính hiển thị “Thiếu dữ liệu” và xóa kết luận.
+- Đồng thuận khung lớn vẫn là điều kiện nội bộ để xác nhận EMA, nhưng thông báo kỹ thuật dài không còn được đưa lên tiêu đề. Thẻ chính chỉ hiển thị `Xu hướng tăng`, `Xu hướng giảm`, `Chưa có xu hướng rõ` hoặc `Chờ dữ liệu`.
 
-Xác nhận chỉ mô tả nến t, không được mang sang nến kế tiếp nếu nến kế tiếp không thỏa quy tắc. Hiển thị giờ đóng nến phát tín hiệu và **giá đóng nến xác nhận làm mức tham chiếu**, không phải giá khớp lệnh. Lịch sử là nhật ký thời điểm quan sát, không phải danh sách tín hiệu hiện tại; không quét ngược tạo tín hiệu cũ thành mới.
+Xác nhận chỉ mô tả nến t, không được mang sang nến kế tiếp nếu nến kế tiếp không thỏa quy tắc. Kịch bản giá dùng **giá đóng nến gần nhất làm mức tham chiếu**, không phải giá khớp lệnh. Lịch sử là nhật ký thời điểm quan sát, không phải danh sách tín hiệu hiện tại; không quét ngược tạo tín hiệu cũ thành mới.
 
 ## Phương pháp bổ sung
 
-Đã tính **RSI, ADX/DMI, Bollinger, Donchian, VWAP, ATR, Supertrend, Ichimoku, Stochastic, CCI, MACD, Momentum, Aroon, ROC, Williams %R, MFI, OBV, Chaikin Oscillator, Awesome Oscillator, Stochastic RSI, Bull Bear Power và Ultimate Oscillator**. Giao diện giữ đủ 22 phương pháp trong 4 khối và quy về ba trạng thái tăng/giảm/chưa rõ; công thức và giới hạn được ghi tại `docs/ANALYSIS.md`. Không thêm request API vì lớp đa khung tái sử dụng M15/M30/H1 vốn đã tải.
+Đã tính 22 chỉ báo nền cùng 8 mô hình mới: **EMA100 Breakout & Retest, HTF Rejection, EMA Squeeze, Hidden Divergence, EMA 2B Sweep, Rubber Band, EMA50 Double Test và Trend Surfing**. P1 Value Zone Pullback trong tài liệu trùng logic EMA chính nên không đếm lặp. Giao diện giữ đủ 30 phương pháp trong 5 khối và quy về ba trạng thái tăng/giảm/chưa rõ. Không thêm request API vì lớp đa khung tái sử dụng dữ liệu vốn đã tải.
+
+Thẻ tín hiệu không còn hiển thị lỗi “khung thời gian trái chiều” hay mục đối chiếu khung lớn. Khi hướng EMA rõ, giao diện thay bằng **Kịch bản giá tham khảo**: giá đóng làm mốc, mức vô hiệu tại `min(Low 4 nến, EMA50) − 0,5×ATR` cho hướng tăng (đối xứng cho hướng giảm), TP1 tại 1,3R và TP2 tại 2,2R. Đây là mức kỹ thuật để quan sát, không phải lệnh, giá khớp, position sizing hay cam kết lợi nhuận.
+
+Không triển khai position sizing, đòn bẩy 10x, pyramiding, webhook hoặc Telegram trong tài liệu nguồn. Chúng nằm ngoài phạm vi công cụ hỗ trợ phân tích và chưa có kiểm định hiệu quả.
 
 Các phương pháp dùng cùng nến đã đóng, không cộng điểm hoặc thay đổi xác nhận EMA. Xem [ANALYSIS.md](docs/ANALYSIS.md) để đọc đầy đủ công thức và các tài liệu TradingView chính thức đã đối chiếu.
 

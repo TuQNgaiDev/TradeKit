@@ -71,8 +71,12 @@ async def main():
   await page.add_init_script("localStorage.setItem('cl-history',JSON.stringify([{symbol:'OLDUSDT',label:'SPOT OLD'}])); if(!localStorage.getItem('cl-watch')) localStorage.setItem('cl-watch',JSON.stringify(['BTCUSDT']));")
   await page.goto(BASE)
   await page.wait_for_function("document.getElementById('connection').textContent.includes('Đã cập nhật')")
-  assert await page.locator('#verdict').inner_text()=='Có xác nhận Long'
+  assert await page.locator('#verdict').inner_text()=='Xu hướng tăng'
   assert 'bull' in (await page.locator('#signalicon').get_attribute('class'))
+  assert await page.locator('#trade-plan').is_visible()
+  for selector in ['#plan-entry','#plan-stop','#plan-tp1','#plan-tp2']:
+   assert await page.locator(selector).inner_text()!='—'
+  assert await page.locator('.comparison-brief,#comparison').count()==0
   assert 'bull' in (await page.locator('#direction').get_attribute('class'))
   assert await page.locator('#price').inner_text()=='349.5 USDT'
   assert '999' not in await page.locator('#ema-values').inner_text()
@@ -113,12 +117,12 @@ async def main():
    await page.locator(f'#{section}-panel summary').click()
    await page.locator(f'#{section}-panel summary').click()
   report['simulated_browser']['compact_disclosures_and_keyboard']=True
-  assert await page.locator('.method-group').count()==4
-  assert await page.locator('.method-card').count()==22
+  assert await page.locator('.method-group').count()==5
+  assert await page.locator('.method-card').count()==30
   balance=await page.locator('#indicator-balance').evaluate('(e)=>({total:Number(e.dataset.total),long:Number(e.dataset.long),short:Number(e.dataset.short),neutral:Number(e.dataset.neutral)})')
-  assert balance['total']==28 and balance['long']+balance['short']+balance['neutral']==28
-  assert await page.locator('#long-percent').inner_text()==f"{round(balance['long']/28*100)}%"
-  assert await page.locator('#short-percent').inner_text()==f"{round(balance['short']/28*100)}%"
+  assert balance['total']==36 and balance['long']+balance['short']+balance['neutral']==36
+  assert await page.locator('#long-percent').inner_text()==f"{round(balance['long']/36*100)}%"
+  assert await page.locator('#short-percent').inner_text()==f"{round(balance['short']/36*100)}%"
   assert await page.locator('#timeframe-confluence').is_visible()
   assert await page.locator('.confluence-card').count()==3
   assert '3/3 khung tăng' in await page.locator('#confluence-state').inner_text()
@@ -130,7 +134,7 @@ async def main():
   assert await page.locator('[data-method="atr"] .method-state').text_content()=='— Chưa rõ'
   original_verdict=await page.locator('#verdict').inner_text()
   assert await page.locator('#chart polyline').count()==4
-  report['simulated_browser']['twenty_two_methods_in_four_groups']=True
+  report['simulated_browser']['thirty_methods_in_five_groups']=True
   report['simulated_browser']['m15_m30_h1_confluence']=True
   report['simulated_browser']['overlays_keep_ema_signal_and_make_no_requests']=True
   report['simulated_browser']['vwap_does_not_connect_utc_sessions']=True
@@ -149,6 +153,20 @@ async def main():
    assert not clipped_conditions,f'Clipped EMA conditions at {width}: {clipped_conditions}'
    card_height=await page.locator('.method-card').first.bounding_box()
    assert card_height['height']<=(96 if width<=650 else 90),f'Method card too tall at {width}: {card_height}'
+   chart_geometry=await page.locator('#chart').evaluate('''chart=>{
+    const viewWidth=chart.viewBox.baseVal.width;
+    const axisRight=Math.max(...[...chart.querySelectorAll('line')].map(line=>Number(line.getAttribute('x2'))));
+    const labelsFit=[...chart.querySelectorAll('text')].every(label=>{const box=label.getBBox();return box.x+box.width<=viewWidth;});
+    return {rightGap:viewWidth-axisRight,labelsFit};
+   }''')
+   assert chart_geometry['rightGap']<=55,f'Price axis too far from right edge at {width}: {chart_geometry}'
+   assert chart_geometry['labelsFit'],f'Price labels clipped at {width}: {chart_geometry}'
+   plan_columns=await page.locator('.plan-levels').evaluate("el=>getComputedStyle(el).gridTemplateColumns.split(' ').length")
+   assert plan_columns==(4 if width>950 else 2),f'Unexpected plan layout at {width}: {plan_columns} columns'
+   if width==1440:
+    chart_box=await page.locator('.chartpanel').bounding_box()
+    verdict_box=await page.locator('.verdict').bounding_box()
+    assert abs(chart_box['height']-verdict_box['height'])<=2,f'Chart and verdict heights differ: {chart_box} vs {verdict_box}'
    await page.locator('.disclosures > details').evaluate_all('(items)=>items.forEach(el=>el.open=true)')
    assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Expanded overflow at {width}'
    await page.locator('.disclosures > details').evaluate_all('(items)=>items.forEach(el=>el.open=false)')
@@ -163,8 +181,7 @@ async def main():
   await page.click('[data-frame="30m"]')
   await page.wait_for_function("document.getElementById('connection').textContent.includes('Đã cập nhật')")
   assert 'M30' in await page.locator('#pair').inner_text()
-  assert await page.locator('#verdict').inner_text()=='Có xác nhận Long'
-  assert 'M30 → H1' in await page.locator('#comparison').inner_text()
+  assert await page.locator('#verdict').inner_text()=='Xu hướng tăng'
   report['simulated_browser']['sol_default_and_three_frames']=True
   report['simulated_browser']['m30_with_h1_confirmation']=True
   # Start slower BTC request with empty cache, switch to ETH immediately, then frame.
@@ -223,11 +240,11 @@ async def main():
   await page.wait_for_function("document.getElementById('connection').textContent.includes('Đã cập nhật')")
   assert len(calls)>count_before
   report['simulated_browser']['hidden_skips_and_visible_refreshes']=True
-  # Expire loaded data, ensure reference is cleared too.
+  # Expire loaded data, ensure the scenario is cleared too.
   await page.evaluate('lastSuccess=performance.now()-181000')
   await page.clock.fast_forward(5000)
   await page.wait_for_function("document.getElementById('connection').textContent.includes('đã cũ')",timeout=7000)
-  assert await page.locator('#reference').is_hidden()
+  assert await page.locator('#trade-plan').is_hidden()
   assert await page.locator('#price').inner_text()=='—'
   report['simulated_browser']['stale_clears_confirmation']=True
   # Errors are tested in fresh tabs, avoiding production cache.

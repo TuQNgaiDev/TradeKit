@@ -26,8 +26,9 @@ const SOURCES={
   bullbear:'https://www.tradingview.com/support/solutions/43000717955-bull-bear-power/',
   ultimate:'https://www.tradingview.com/support/solutions/43000502328-ultimate-oscillator-uo/'
 };
-const GROUPS={trend:'Xu hướng & cấu trúc',momentum:'Động lượng',volume:'Dòng tiền & khối lượng',volatility:'Biến động'};
-const METHOD_GROUP={adx:'trend',channel:'trend',supertrend:'trend',ichimoku:'trend',aroon:'trend',bullbear:'trend',rsi:'momentum',stochastic:'momentum',cci:'momentum',macd:'momentum',momentum:'momentum',roc:'momentum',williams:'momentum',awesome:'momentum',stochrsi:'momentum',ultimate:'momentum',vwap:'volume',mfi:'volume',obv:'volume',chaikin:'volume',bb:'volatility',atr:'volatility'};
+const GROUPS={trend:'Xu hướng & cấu trúc',momentum:'Động lượng',volume:'Dòng tiền & khối lượng',volatility:'Biến động',patterns:'Mô hình 3-EMA'};
+const METHOD_GROUP={adx:'trend',channel:'trend',supertrend:'trend',ichimoku:'trend',aroon:'trend',bullbear:'trend',rsi:'momentum',stochastic:'momentum',cci:'momentum',macd:'momentum',momentum:'momentum',roc:'momentum',williams:'momentum',awesome:'momentum',stochrsi:'momentum',ultimate:'momentum',vwap:'volume',mfi:'volume',obv:'volume',chaikin:'volume',bb:'volatility',atr:'volatility',ema100retest:'patterns',htfrejection:'patterns',emasqueeze:'patterns',hiddendiv:'patterns',liquiditysweep:'patterns',rubberband:'patterns',doubletest:'patterns',trendsurf:'patterns'};
+const LOCAL_SOURCE='Tài liệu đặc tả 3-EMA do người dùng cung cấp';
 // Wilder: SMA seed of N consecutive finite samples; alpha = 1/N thereafter.
 function rma(values,period){
   if(!Number.isInteger(period)||period<1)throw Error('Chu kỳ Wilder không hợp lệ');
@@ -171,15 +172,20 @@ function ultimate(rows){
 }
 function calculate(rows){
   const closes=rows.map(r=>r.close);
-  return {rsi:rsi(closes),...directional(rows),bb:bollinger(closes),channel:donchian(rows),vwap:sessionVWAP(rows),supertrend:supertrend(rows),ichimoku:ichimoku(rows),stochastic:stochastic(rows),cci:cci(rows),macd:macd(closes),momentum:momentum(closes),aroon:aroon(rows),roc:roc(closes),williams:williams(rows),mfi:mfi(rows),obv:obv(rows),chaikin:chaikin(rows),awesome:awesome(rows),stochrsi:stochasticRsi(closes),bullbear:bullBear(rows),ultimate:ultimate(rows)};
+  return {rsi:rsi(closes),...directional(rows),bb:bollinger(closes),channel:donchian(rows),vwap:sessionVWAP(rows),supertrend:supertrend(rows),ichimoku:ichimoku(rows),stochastic:stochastic(rows),cci:cci(rows),macd:macd(closes),momentum:momentum(closes),aroon:aroon(rows),roc:roc(closes),williams:williams(rows),mfi:mfi(rows),obv:obv(rows),chaikin:chaikin(rows),awesome:awesome(rows),stochrsi:stochasticRsi(closes),bullbear:bullBear(rows),ultimate:ultimate(rows),e20:emaSeries(closes,20),e50:emaSeries(closes,50),e100:emaSeries(closes,100)};
+}
+function riskPlan(rows,data,direction){
+  const i=rows.length-1,entry=rows[i]?.close,atr=data?.atr?.[i];if(![1,-1].includes(direction)||!Number.isFinite(entry)||!Number.isFinite(atr)||atr<=0)return null;
+  const recent=rows.slice(-4),base=direction===1?Math.min(...recent.map(x=>x.low),data.e50[i]):Math.max(...recent.map(x=>x.high),data.e50[i]),stop=base-direction*.5*atr,risk=direction*(entry-stop);
+  return Number.isFinite(risk)&&risk>0?{entry,stop,tp1:entry+direction*1.3*risk,tp2:entry+direction*2.2*risk,risk,atr}:null;
 }
 const average=a=>a.length&&a.every(Number.isFinite)?a.reduce((s,v)=>s+v,0)/a.length:null;
 const number=v=>Number.isFinite(v)?v.toLocaleString('en-US',{maximumFractionDigits:Math.abs(v)<1?4:2}):'—';
-function summarize(rows,data){
+function summarize(rows,data,context={}){
   const i=rows.length-1,r=rows[i],cards=[];
   if(!r)return cards;
   function add(id,title,state,direction,metrics,meaning,rule,limit){
-    cards.push({id,title,state,direction,group:METHOD_GROUP[id],metrics,meaning,rule,limit,source:SOURCES[id]});
+    cards.push({id,title,state,direction,group:METHOD_GROUP[id],metrics,meaning,rule,limit,source:SOURCES[id]||LOCAL_SOURCE});
   }
   const rv=data.rsi[i];
   add('rsi','RSI · Động lượng',rv===null?'Thiếu dữ liệu':rv>=70?'Quá mua':rv<=30?'Quá bán':rv>50?'Động lượng tăng':rv<50?'Động lượng giảm':'Cân bằng',rv===null?0:Math.sign(rv-50),
@@ -248,7 +254,35 @@ function summarize(rows,data){
   add('bullbear','Bull Bear Power · EMA13',bullBearDir>0?'Bear Power đang cải thiện':bullBearDir<0?'Bull Power đang suy yếu':'Chưa rõ',bullBearDir,[['Bull / Bear',number(bull)+' / '+number(bear)]],'Đo High và Low lệch khỏi EMA13 để đọc sức mua/bán.','Theo Technical Ratings: hướng EMA13, dấu của Bull/Bear Power và thay đổi so với nến trước phải đồng thuận.','Phụ thuộc biên High–Low và có thể trung tính trong phần lớn xu hướng.');
   const uo=data.ultimate[i],ultimateDir=!Number.isFinite(uo)?0:uo>70?1:uo<30?-1:0;
   add('ultimate','Ultimate Oscillator · 7–14–28',ultimateDir>0?'Áp lực mua mạnh':ultimateDir<0?'Áp lực mua yếu':'Chưa rõ',ultimateDir,[['UO',number(uo)]],'Gộp buying pressure trên ba cửa sổ với trọng số 4–2–1.','Theo Technical Ratings: UO >70 là tăng, UO <30 là giảm, còn lại trung tính.','Ngưỡng cực trị hiếm và không thay thế phân tích phân kỳ đầy đủ.');
+  if(i<40){
+    [['ema100retest','EMA100 · Breakout & Retest'],['htfrejection','HTF · Rút râu tại EMA'],['emasqueeze','EMA Squeeze · Inside Breakout'],['hiddendiv','Phân kỳ kín · EMA Bounce'],['liquiditysweep','EMA 2B · Quét thanh khoản'],['rubberband','Rubber Band · Hồi về EMA20'],['doubletest','EMA50 · Kiểm tra kép'],['trendsurf','Trend Surfing · EMA20']].forEach(([id,title])=>add(id,title,'Thiếu dữ liệu',0,[['Trạng thái','Cần thêm nến']],'Chưa đủ mẫu để đánh giá mô hình.','Chỉ đánh giá trên chuỗi nến đã đóng có đủ dữ liệu làm ấm.','Không tạo hướng khi thiếu mẫu.'));
+    return cards;
+  }
+  const avgVolume=average(rows.slice(i-20,i).map(x=>x.volume)),volumeRatio=avgVolume?rows[i].volume/avgVolume:null,atrNow=data.atr[i],candleBull=r.close>r.open,candleBear=r.close<r.open;
+  const crossUp=(a,b,j)=>a[j]>b[j]&&a[j-1]<=b[j-1],crossDown=(a,b,j)=>a[j]<b[j]&&a[j-1]>=b[j-1];
+  const e100Up=i>11&&rows.slice(i-11,i-1).every((x,j)=>x.close<=data.e100[i-11+j])&&crossUp(rows.map(x=>x.close),data.e100,i-1)&&rows[i-1].volume>=1.5*average(rows.slice(i-21,i-1).map(x=>x.volume))&&r.low<=data.e100[i]&&r.close>=data.e100[i]&&candleBull;
+  const e100Down=i>11&&rows.slice(i-11,i-1).every((x,j)=>x.close>=data.e100[i-11+j])&&crossDown(rows.map(x=>x.close),data.e100,i-1)&&rows[i-1].volume>=1.5*average(rows.slice(i-21,i-1).map(x=>x.volume))&&r.high>=data.e100[i]&&r.close<=data.e100[i]&&candleBear;
+  add('ema100retest','EMA100 · Breakout & Retest',e100Up?'Retest tăng sau phá EMA100':e100Down?'Retest giảm sau phá EMA100':'Chưa rõ',e100Up?1:e100Down?-1:0,[['Volume / SMA20',volumeRatio===null?'—':number(volumeRatio)+'×']],'Nhận diện phá EMA100 bằng volume rồi retest trên nến kế tiếp.','10 nến cùng phía cũ; nến trước cắt EMA100 với volume ≥1,5×; nến cuối retest và đóng đúng màu.','Quy tắc chặt nên tín hiệu hiếm; không tự suy ra điểm vào hoặc mức dừng lỗ.');
+  const higher=context.higher,higherE=higher?.e50?.at(-1),higherE100=higher?.e100?.at(-1),upperWick=r.high-Math.max(r.open,r.close),lowerWick=Math.min(r.open,r.close)-r.low,range=r.high-r.low;
+  const htfShort=Number.isFinite(higherE)&&[higherE,higherE100].some(v=>Number.isFinite(v)&&r.high>=v&&r.low<=v)&&range>0&&upperWick>=.5*range&&r.close<data.e20[i];
+  const htfLong=Number.isFinite(higherE)&&[higherE,higherE100].some(v=>Number.isFinite(v)&&r.high>=v&&r.low<=v)&&range>0&&lowerWick>=.5*range&&r.close>data.e20[i];
+  add('htfrejection','HTF · Rút râu tại EMA',htfLong?'Rút chân tăng tại EMA khung lớn':htfShort?'Rút râu giảm tại EMA khung lớn':'Chưa rõ',htfLong?1:htfShort?-1:0,[['EMA HTF 50 / 100',number(higherE)+' / '+number(higherE100)]],'Đối chiếu biên nến hiện tại với EMA50/100 của khung lớn đã đóng.','Râu từ chối ≥50% biên nến và Close quay về đúng phía EMA20 khung hiện tại.','EMA khung lớn là giá trị nến đóng gần nhất, không nội suy trong nến.');
+  const mother=rows[i-2],inside=rows[i-1],insideBar=inside.high<=mother.high&&inside.low>=mother.low,squeezed=Math.abs(data.e20[i-1]-data.e50[i-1])<=.4*data.atr[i-1],squeezeLong=insideBar&&squeezed&&r.close>mother.high&&volumeRatio>=1.2,squeezeShort=insideBar&&squeezed&&r.close<mother.low&&volumeRatio>=1.2;
+  add('emasqueeze','EMA Squeeze · Inside Breakout',squeezeLong?'Bung nén tăng':squeezeShort?'Bung nén giảm':'Chưa rõ',squeezeLong?1:squeezeShort?-1:0,[['Khoảng EMA / ATR',number(Math.abs(data.e20[i]-data.e50[i]))+' / '+number(atrNow)]],'Tìm Inside Bar trong lúc EMA20–50 co hẹp rồi phá Mother Bar.','|EMA20−EMA50| ≤0,4×ATR; Close phá biên Mother Bar; volume ≥1,2×SMA20.','Breakout có thể thất bại; không dùng riêng để đặt lệnh.');
+  const pivots=(kind)=>{const out=[];for(let j=Math.max(2,i-40);j<=i-2;j++){const v=rows[j][kind],window=rows.slice(j-2,j+3).map(x=>x[kind]);if((kind==='low'&&v===Math.min(...window))||(kind==='high'&&v===Math.max(...window)))out.push(j);}return out;},lows=pivots('low').slice(-2),highs=pivots('high').slice(-2);
+  const hiddenLong=lows.length===2&&rows[lows[1]].low>rows[lows[0]].low&&data.rsi[lows[1]]<data.rsi[lows[0]]&&Math.min(Math.abs(rows[lows[1]].low-data.e50[lows[1]]),Math.abs(rows[lows[1]].low-data.e100[lows[1]]))<=.3*data.atr[lows[1]]&&candleBull;
+  const hiddenShort=highs.length===2&&rows[highs[1]].high<rows[highs[0]].high&&data.rsi[highs[1]]>data.rsi[highs[0]]&&Math.min(Math.abs(rows[highs[1]].high-data.e50[highs[1]]),Math.abs(rows[highs[1]].high-data.e100[highs[1]]))<=.3*data.atr[highs[1]]&&candleBear;
+  add('hiddendiv','Phân kỳ kín · EMA Bounce',hiddenLong?'Phân kỳ kín tăng':hiddenShort?'Phân kỳ kín giảm':'Chưa rõ',hiddenLong?1:hiddenShort?-1:0,[['Pivot gần nhất',lows.at(-1)??highs.at(-1)??'—']],'So hai swing đã xác nhận bằng cửa sổ 5 nến với RSI và EMA50/100.','Tăng: higher low của giá, lower low RSI, chạm EMA ±0,3ATR và nến cuối tăng; giảm đối xứng.','Pivot cần hai nến bên phải nên có độ trễ; không repaint sau khi xác nhận.');
+  const prev=rows[i-1],sweepShort=prev.high>data.e50[i-1]&&r.close<data.e50[i]&&candleBear&&r.open>=prev.close&&r.close<=prev.open&&r.volume>prev.volume,sweepLong=prev.low<data.e50[i-1]&&r.close>data.e50[i]&&candleBull&&r.open<=prev.close&&r.close>=prev.open&&r.volume>prev.volume;
+  add('liquiditysweep','EMA 2B · Quét thanh khoản',sweepLong?'Quét xuống rồi đảo tăng':sweepShort?'Quét lên rồi đảo giảm':'Chưa rõ',sweepLong?1:sweepShort?-1:0,[['Volume hiện tại / trước',number(r.volume)+' / '+number(prev.volume)]],'Nhận diện phá giả EMA50 rồi nến kế tiếp engulfing kéo giá trở lại.','Nến trước xuyên EMA50; nến cuối engulfing ngược hướng, đóng lại phía kia và volume lớn hơn.','Không thể xác định ý đồ thị trường; đây chỉ là mẫu hình giá/volume.');
+  const stretch=(r.close-data.e20[i])/atrNow,prevRange=prev.high-prev.low,prevDoji=prevRange>0&&Math.abs(prev.close-prev.open)<=.15*prevRange,prevHammer=prevRange>0&&(Math.min(prev.open,prev.close)-prev.low)>=.5*prevRange,prevStar=prevRange>0&&(prev.high-Math.max(prev.open,prev.close))>=.5*prevRange;
+  const rubberLong=stretch<=-3&&data.rsi[i-1]<=25&&(prevDoji||prevHammer)&&r.close>prev.high,rubberShort=stretch>=3&&data.rsi[i-1]>=75&&(prevDoji||prevStar)&&r.close<prev.low;
+  add('rubberband','Rubber Band · Hồi về EMA20',rubberLong?'Hồi quy tăng tiềm năng':rubberShort?'Hồi quy giảm tiềm năng':'Chưa rõ',rubberLong?1:rubberShort?-1:0,[['Khoảng cách / ATR',number(stretch)+'×']],'Tìm giá cách EMA20 ít nhất 3 ATR, RSI cực trị và nến xác nhận phá mẫu đảo chiều.','RSI ≤25 hoặc ≥75; Doji/Hammer/Shooting Star; nến cuối phá biên theo hướng hồi quy.','Là mô hình ngược xu hướng rủi ro cao; chỉ hiển thị quan sát.');
+  const touches50=j=>rows[j].high>=data.e50[j]&&rows[j].low<=data.e50[j],touches=[];for(let j=i-9;j<=i;j++)if(j>=1&&touches50(j))touches.push(j);const t2=touches.at(-1),t1=touches.slice(0,-1).reverse().find(j=>t2-j>=3&&t2-j<=8),doubleLong=t1!==undefined&&t2===i&&rows[t2].low>=rows[t1].low-.2*data.atr[t2]&&candleBull,doubleShort=t1!==undefined&&t2===i&&rows[t2].high<=rows[t1].high+.2*data.atr[t2]&&candleBear;
+  add('doubletest','EMA50 · Kiểm tra kép',doubleLong?'Hai lần test hỗ trợ':doubleShort?'Hai lần test kháng cự':'Chưa rõ',doubleLong?1:doubleShort?-1:0,[['Khoảng cách hai lần',t1===undefined?'—':String(t2-t1)+' nến']],'Tìm hai lần chạm EMA50 cách nhau 3–8 nến với lần hai không xuyên sâu.','Lần hai lệch tối đa 0,2ATR so với lần đầu và đóng đúng màu.','Không kiểm tra mức nảy 0,8ATR giữa hai lần nếu chuỗi chạm liên tục.');
+  const adxRising=data.adx[i]>=30&&data.adx[i]>data.adx[i-1],emaSlope=data.e20[i]-data.e20[i-3],retestLong=prev.low<=data.e20[i-1]&&prev.close>=data.e20[i-1]&&r.close>prev.high,retestShort=prev.high>=data.e20[i-1]&&prev.close<=data.e20[i-1]&&r.close<prev.low,trendLong=adxRising&&emaSlope>=1.5*atrNow&&retestLong,trendShort=adxRising&&emaSlope<=-1.5*atrNow&&retestShort;
+  add('trendsurf','Trend Surfing · EMA20',trendLong?'Gia tốc tăng trên EMA20':trendShort?'Gia tốc giảm dưới EMA20':'Chưa rõ',trendLong?1:trendShort?-1:0,[['ADX / dốc EMA20',number(data.adx[i])+' / '+number(emaSlope)]],'Tìm xu hướng rất mạnh bám EMA20 và nến cuối phá biên nến retest.','ADX ≥30 và tăng; dốc EMA20 trong 3 nến ≥1,5ATR; retest nông rồi phá biên.','Điều kiện dốc rất chặt nên tín hiệu hiếm; không triển khai trailing stop.');
   return cards;
 }
-root.CoinMethods={SOURCES,GROUPS,rma,rsi,directional,bollinger,donchian,sessionVWAP,sma,supertrend,ichimoku,stochastic,cci,macd,momentum,aroon,roc,williams,mfi,obv,chaikin,awesome,stochasticRsi,bullBear,ultimate,calculate,summarize};
+root.CoinMethods={SOURCES,GROUPS,rma,rsi,directional,bollinger,donchian,sessionVWAP,sma,supertrend,ichimoku,stochastic,cci,macd,momentum,aroon,roc,williams,mfi,obv,chaikin,awesome,stochasticRsi,bullBear,ultimate,calculate,riskPlan,summarize};
 })(globalThis);

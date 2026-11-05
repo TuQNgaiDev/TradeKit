@@ -134,9 +134,9 @@ async function runTests(){
     near(a.rsi.at(-1),b.rsi.at(-1));near(a.atr.at(-1),b.atr.at(-1));near(a.vwap.values.at(-1),b.vwap.values.at(-1));
     const before=M.calculate(rows.slice(0,499));near(b.rsi[498],before.rsi.at(-1));near(b.bb.upper[498],before.bb.upper.at(-1));
   });
-  await test('22 thẻ thuộc 4 nhóm có quy tắc/nguồn; ATR không chỉ hướng; không đổi EMA',()=>{
+  await test('30 thẻ thuộc 5 nhóm có quy tắc/nguồn; ATR không chỉ hướng; không đổi EMA',()=>{
     const d=pulled(),before=C.evaluate(d,d,'30m').status,extra=M.calculate(d.rows),cards=M.summarize(d.rows,extra);
-    assert(cards.length===22&&new Set(cards.map(c=>c.id)).size===22&&new Set(cards.map(c=>c.group)).size===4);assert(cards.every(c=>c.rule&&c.limit&&c.source.startsWith('https://www.tradingview.com/')));
+    assert(cards.length===30&&new Set(cards.map(c=>c.id)).size===30&&new Set(cards.map(c=>c.group)).size===5);assert(cards.every(c=>c.rule&&c.limit&&c.source));
     assert(cards.find(c=>c.id==='atr').direction===0);d.methods=extra;assert(C.evaluate(d,d,'30m').status===before);
     assert(cards.find(c=>c.id==='rsi').state==='Quá mua'&&cards.find(c=>c.id==='rsi').direction===1);
   });
@@ -153,6 +153,15 @@ async function runTests(){
     assert(d.stochrsi.k.slice(0,29).every(v=>v===null)&&Number.isFinite(d.stochrsi.k.at(-1))&&Number.isFinite(d.stochrsi.d.at(-1)));
     assert(d.bullbear.baseline[11]===null&&Number.isFinite(d.bullbear.baseline[12])&&Number.isFinite(d.bullbear.bull.at(-1)));
     assert(d.ultimate[26]===null&&Number.isFinite(d.ultimate[27]));near(f.ultimate.at(-1),50);
+  });
+  await test('8 mô hình trong tài liệu 3-EMA có mặt, chỉ dùng nến đóng và không đổi tín hiệu chính',()=>{
+    const rows=fixture(),data=M.calculate(rows),higher=M.calculate(fixture()),cards=M.summarize(rows,data,{higher}),ids=['ema100retest','htfrejection','emasqueeze','hiddendiv','liquiditysweep','rubberband','doubletest','trendsurf'];
+    assert(ids.every(id=>cards.some(card=>card.id===id&&card.group==='patterns')));assert(cards.filter(card=>card.group==='patterns').length===8);
+    const before=C.evaluate(C.indicators(rows),C.indicators(rows),'30m').status;data.patterns=cards;assert(C.evaluate(C.indicators(rows),C.indicators(rows),'30m').status===before);
+  });
+  await test('Kịch bản giá dùng Close, EMA50, ATR và R 1,3 / 2,2 đúng công thức',()=>{
+    for(const direction of [1,-1]){const rows=fixture(direction),data=M.calculate(rows),plan=M.riskPlan(rows,data,direction),i=rows.length-1,base=direction===1?Math.min(...rows.slice(-4).map(r=>r.low),data.e50[i]):Math.max(...rows.slice(-4).map(r=>r.high),data.e50[i]),stop=base-direction*.5*data.atr[i],risk=direction*(rows[i].close-stop);near(plan.entry,rows[i].close);near(plan.stop,stop);near(plan.tp1,rows[i].close+direction*1.3*risk);near(plan.tp2,rows[i].close+direction*2.2*risk);}
+    assert(M.riskPlan(fixture(),M.calculate(fixture()),0)===null);
   });
   await test('Thiếu mẫu chỉ báo mới trả null thay vì giá trị bịa',()=>{
     const rows=fixture().slice(0,2),d=M.calculate(rows);assert(d.rsi.at(-1)===null&&d.adx.at(-1)===null&&d.atr.at(-1)===null&&d.channel.upper.at(-1)===null);

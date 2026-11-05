@@ -49,29 +49,37 @@
       <p id="direction" class="direction">Hướng quan sát: —</p>
       <h2 id="verdict">Chờ dữ liệu</h2>
       <p id="explanation" class="muted">Kết luận xuất hiện khi có dữ liệu hợp lệ.</p>
-      <section id="indicator-balance" class="indicator-balance" aria-label="Phân bổ hướng của 22 phương pháp và 6 góc nhìn EMA" hidden>
-        <div class="balance-head"><div><strong>Phân bổ xu hướng</strong><small>22 phương pháp + 6 EMA</small></div><span class="balance-total">28 tổng</span></div>
+      <section id="indicator-balance" class="indicator-balance" aria-label="Phân bổ hướng của 30 phương pháp và 6 góc nhìn EMA" hidden>
+        <div class="balance-head"><div><strong>Phân bổ xu hướng</strong><small>30 phương pháp + 6 EMA</small></div><span class="balance-total">36 tổng</span></div>
         <div class="balance-values">
-          <div class="balance-side long-side"><span><i class="balance-dot long-dot"></i>Long</span><strong id="long-percent">0%</strong><small id="long-count">0 trên 28</small></div>
-          <div class="balance-side short-side"><span><i class="balance-dot short-dot"></i>Short</span><strong id="short-percent">0%</strong><small id="short-count">0 trên 28</small></div>
+          <div class="balance-side long-side"><span><i class="balance-dot long-dot"></i>Long</span><strong id="long-percent">0%</strong><small id="long-count">0 trên 36</small></div>
+          <div class="balance-side short-side"><span><i class="balance-dot short-dot"></i>Short</span><strong id="short-percent">0%</strong><small id="short-count">0 trên 36</small></div>
         </div>
         <div class="balance-bar" aria-hidden="true"><span id="long-bar"></span><span id="neutral-bar"></span><span id="short-bar"></span></div>
-        <div class="balance-foot"><span id="neutral-count">Chưa rõ · 28/28</span><small>Không phải xác suất thắng</small></div>
+        <div class="balance-foot"><span id="neutral-count">Chưa rõ · 36/36</span><small>Không phải xác suất thắng</small></div>
       </section>
       <section id="timeframe-confluence" class="timeframe-confluence" aria-label="Đồng thuận M15 M30 H1" hidden>
         <div class="confluence-head"><div><strong>Đồng thuận 3 khung</strong><small>EMA cùng phía đa số phương pháp</small></div><span id="confluence-state" class="status miss">— Chưa rõ</span></div>
         <div id="confluence-frames" class="confluence-frames"></div>
         <p class="fine">Bộ lọc bổ trợ, không thay thế xác nhận EMA và không phải xác suất thắng.</p>
       </section>
-      <div id="reference" class="reference" hidden></div>
-      <div class="comparison-brief"><span class="fieldlabel">Đối chiếu khung lớn</span><p id="comparison">Chưa có dữ liệu</p></div>
-      <p class="fine verdict-note">Chỉ xác nhận bằng nến đã đóng. Mức tham chiếu là giá đóng nến, không phải giá khớp lệnh.</p>
+      <section id="trade-plan" class="trade-plan" aria-label="Kịch bản giá tham khảo" hidden>
+        <div class="plan-head"><div><strong>Kịch bản giá tham khảo</strong><small id="plan-side">Theo hướng EMA hiện tại</small></div><span class="plan-badge">ATR14</span></div>
+        <div class="plan-levels">
+          <div><span>Mốc giá đóng</span><strong id="plan-entry">—</strong></div>
+          <div class="risk-level"><span>Mức vô hiệu</span><strong id="plan-stop">—</strong></div>
+          <div><span>TP1 · 1,3R</span><strong id="plan-tp1">—</strong></div>
+          <div><span>TP2 · 2,2R</span><strong id="plan-tp2">—</strong></div>
+        </div>
+        <p class="fine">Mức kỹ thuật tính từ giá đóng, EMA50 và ATR; không phải lệnh, giá khớp hay cam kết lợi nhuận.</p>
+      </section>
+      <p class="fine verdict-note">Chỉ dùng nến đã đóng. Hãy tự đánh giá rủi ro trước mọi quyết định.</p>
     </article>
   </section>
 
   <section class="disclosures" aria-label="Chi tiết phân tích">
     <details class="panel disclosure methods-panel" id="methods-panel" open>
-      <summary><span>Hướng theo phương pháp<small>22 phương pháp · chia theo 4 nhóm phân tích</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+      <summary><span>Hướng theo phương pháp<small>30 phương pháp · chia theo 5 nhóm phân tích</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
       <div id="methods" class="method-groups">Chưa có dữ liệu</div>
     </details>
     <details class="panel disclosure conditions-panel" id="conditions-panel" open>
