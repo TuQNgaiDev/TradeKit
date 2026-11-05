@@ -1,6 +1,6 @@
 # Các phương pháp phân tích bổ sung
 
-Bổ sung 12 phương pháp trên cùng **nến giao dịch Futures đã đóng** của khung đang xem. Mặc định SOLUSDT/M30; khung chọn M15, M30, H1. Không thêm nguồn dữ liệu hoặc request API. Các phương pháp không thay đổi `CoinCore.evaluate`, không cộng điểm và không tạo lệnh hay xác suất thắng. Giao diện luôn giữ đủ 12 phương pháp và chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR và trạng thái trung tính dùng `Chưa rõ` vì không cung cấp hướng.
+Bổ sung 22 phương pháp trên cùng **nến giao dịch Futures đã đóng** của khung đang xem. Mặc định SOLUSDT/M30; khung chọn M15, M30, H1. Không thêm nguồn dữ liệu hoặc request API. Các phương pháp không thay đổi `CoinCore.evaluate`, không cộng điểm và không tạo lệnh hay xác suất thắng. Giao diện chia thành 4 cụm và chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR và trạng thái trung tính dùng `Chưa rõ` vì không cung cấp hướng.
 
 ## Mục đích và tài liệu đối chiếu
 
@@ -18,6 +18,16 @@ Bổ sung 12 phương pháp trên cùng **nến giao dịch Futures đã đóng*
 | CCI20 | CCI cực trị đang quay lên hay quay xuống? | [TradingView CCI](https://www.tradingview.com/support/solutions/43000502001-commodity-channel-index-cci/) |
 | MACD 12–26–9 | MACD đang trên hay dưới đường tín hiệu? | [TradingView Technical Ratings](https://www.tradingview.com/support/solutions/43000614331-technical-ratings/) |
 | Momentum10 | Momentum hiện tại tăng hay giảm so với nến trước? | [TradingView Technical Ratings](https://www.tradingview.com/support/solutions/43000614331-technical-ratings/) |
+| Aroon14 | Đỉnh hay đáy mới xuất hiện gần hơn? | [TradingView Aroon](https://www.tradingview.com/support/solutions/43000501801-aroon-indicator/) |
+| ROC9 | Giá đóng thay đổi bao nhiêu phần trăm so với 9 nến trước? | [TradingView ROC](https://www.tradingview.com/support/solutions/43000502343-rate-of-change-roc/) |
+| Williams %R14 | Động lượng có rời vùng cực trị theo quy tắc Technical Ratings? | [TradingView Williams %R](https://www.tradingview.com/support/solutions/43000501985-williams-r-r/) |
+| MFI14 | Áp lực mua hay bán theo giá và volume đang trội? | [TradingView MFI](https://www.tradingview.com/support/solutions/43000502348-money-flow-mfi/) |
+| OBV | Volume tích lũy theo hướng giá đóng tăng hay giảm? | [TradingView OBV](https://www.tradingview.com/support/solutions/43000502593-on-balance-volume-obv/) |
+| Chaikin 3–10 | Động lượng của Accumulation/Distribution dương hay âm? | [TradingView Chaikin Oscillator](https://www.tradingview.com/support/solutions/43000501979-chaikin-oscillator/) |
+| Awesome Oscillator 5–34 | Động lượng giá trung vị vừa giao qua 0 hay quay hướng? | [TradingView Technical Ratings](https://www.tradingview.com/support/solutions/43000614331-technical-ratings/) |
+| Stochastic RSI 3–3–14–14 | RSI đang quay khỏi vùng cực trị cùng điều kiện xu hướng? | [TradingView Technical Ratings](https://www.tradingview.com/support/solutions/43000614331-technical-ratings/) |
+| Bull Bear Power13 | Sức mua/bán quanh EMA13 đang cải thiện hay suy yếu? | [TradingView Bull Bear Power](https://www.tradingview.com/support/solutions/43000717955-bull-bear-power/) |
+| Ultimate Oscillator 7–14–28 | Buying pressure ba cửa sổ đang ở vùng cực trị nào? | [TradingView Ultimate Oscillator](https://www.tradingview.com/support/solutions/43000502328-ultimate-oscillator-uo/) |
 
 Đã đọc và đối chiếu các tài liệu trên ngày 05/11/2026. Đây là tài liệu về công thức/cách đọc chỉ báo, không phải bằng chứng hiệu quả trên SOL Futures. Phần mã triển khai độc lập; không sao chép bộ chấm điểm hoặc chiến lược của nguồn.
 
@@ -141,16 +151,60 @@ MACD = EMA12(Close) − EMA26(Close); Signal = EMA9 của chuỗi MACD hợp l�
 
 `Momentum(t)=Close(t)−Close(t−10)`. Theo Technical Ratings, Momentum hiện tại cao hơn nến trước là tăng, thấp hơn là giảm, bằng hoặc thiếu mẫu là `Chưa rõ`. Đây là phép đo phản ứng nhanh nên có thể đổi hướng thường xuyên.
 
+## 13. Aroon14 — độ gần của đỉnh và đáy
+
+Aroon Up/Down quy đổi số nến kể từ đỉnh/đáy 14 nến gần nhất về thang 0–100. Tăng khi Up >50 và Down <50; giảm khi Down >50 và Up <50; còn lại `Chưa rõ`. Nếu có nhiều cực trị bằng nhau, lấy cực trị gần hiện tại nhất.
+
+## 14. ROC9 — tốc độ thay đổi
+
+`ROC = (Close(t) / Close(t−9) − 1) × 100`. ROC dương là tăng, âm là giảm, bằng 0 hoặc thiếu mẫu là `Chưa rõ`. ROC không bị chặn biên và phụ thuộc điểm giá dùng để so sánh.
+
+## 15. Williams %R14 — động lượng vùng cực trị
+
+`%R = −100 × (HighestHigh14 − Close) / (HighestHigh14 − LowestLow14)`. Theo Technical Ratings: tăng khi %R <−80 và đang đi lên; giảm khi %R >−20 và đang đi xuống; còn lại `Chưa rõ`. Dải phẳng trả −50 để tránh chia cho 0.
+
+## 16. MFI14 — dòng tiền theo giá và volume
+
+Typical Price bằng `(H+L+C)/3`; raw money flow bằng Typical Price nhân Volume. Tổng flow của các nến có Typical Price tăng và giảm tạo Money Flow Ratio, sau đó `MFI = 100 − 100/(1+ratio)`. Mốc 50 phân hướng; không có flow trả 50.
+
+## 17. OBV — volume tích lũy theo hướng giá
+
+Volume được cộng khi Close tăng, trừ khi Close giảm và giữ nguyên khi bằng nến trước. Vì mức OBV tuyệt đối phụ thuộc điểm bắt đầu, giao diện chỉ phân hướng bằng chênh OBV hiện tại so với 3 nến trước.
+
+## 18. Chaikin Oscillator 3–10 — động lượng Accumulation/Distribution
+
+Money Flow Multiplier bằng `[(Close−Low)−(High−Close)]/(High−Low)`; nến không có biên dùng 0. Money Flow Volume được tích lũy thành ADL. Chaikin bằng `EMA3(ADL) − EMA10(ADL)`; dương là tăng, âm là giảm, bằng 0 là `Chưa rõ`.
+
+## 19. Awesome Oscillator 5–34 — giao và quay động lượng
+
+`AO = SMA5((High+Low)/2) − SMA34((High+Low)/2)`. Theo Technical Ratings, tăng khi AO giao lên 0 hoặc ở trên 0 hai nến liên tiếp rồi quay lên; giảm khi điều kiện đảo lại. Không có sự kiện mới thì `Chưa rõ`.
+
+## 20. Stochastic RSI 3–3–14–14 — động lượng của RSI
+
+RSI14 được đặt vào biên cao–thấp của chính nó trong 14 nến; raw Stoch RSI được làm mượt SMA3 thành K và SMA3 lần nữa thành D. Tăng khi EMA13 đang giảm, K/D <20 và K>D; giảm khi EMA13 đang tăng, K/D >80 và K<D. Đây là quy tắc Technical Ratings, không phải dự báo đảo chiều độc lập.
+
+## 21. Bull Bear Power13 — sức mua/bán quanh EMA
+
+`Bull Power = High − EMA13(Close)` và `Bear Power = Low − EMA13(Close)`. Tăng khi EMA13 đi lên, Bear Power âm nhưng cải thiện; giảm khi EMA13 đi xuống, Bull Power dương nhưng suy yếu. Trường hợp khác `Chưa rõ`.
+
+## 22. Ultimate Oscillator 7–14–28 — buying pressure đa cửa sổ
+
+`BP = Close − min(Low, Close trước)`; `TR = max(High, Close trước) − min(Low, Close trước)`. Tỷ lệ tổng BP/TR được tính cho 7, 14 và 28 nến, sau đó `UO = 100×(4×Avg7 + 2×Avg14 + Avg28)/7`. Theo Technical Ratings, trên 70 là tăng, dưới 30 là giảm. Dải phẳng hoàn toàn được quy về 50 trung tính.
+
+## Đồng thuận M15–M30–H1
+
+Với từng khung, hệ thống tính hướng EMA bằng đúng thứ tự EMA20–50–100 và độ dốc 3 nến. Đồng thời đếm hướng của 22 phương pháp trên chính 500 nến đã đóng của khung đó. Khung chỉ được gắn tăng/giảm khi hướng EMA khác 0 và trùng với dấu của `(số tăng − số giảm)`. Kết quả chung là tăng hoặc giảm khi ít nhất 2 trong 3 khung cùng hướng; nếu không thì `Chưa đồng thuận`.
+
+Lớp này tái sử dụng dữ liệu M15, M30 và H1 đã tải, không thêm request. Nó không sửa `CoinCore.evaluate`, không biến tín hiệu cũ thành tín hiệu mới và không thay thế yêu cầu khung lớn của xác nhận EMA chính.
+
 ## Giao diện và quan hệ với tín hiệu chính
 
-Mười hai thẻ nằm trong mục **Hướng theo phương pháp**, mở sẵn. Mỗi thẻ chỉ hiển thị tên và tag tăng/giảm/chưa rõ; công thức, quy tắc và giới hạn được giữ trong tài liệu này. Thời gian nến và khung áp dụng được ghi ở đầu mục.
-
-Chọn **Vẽ thêm**: Chỉ EMA / Bollinger / Donchian / VWAP. Luôn giữ bốn đường cơ sở gồm giá đóng và ba EMA. Chỉ thêm một lớp mỗi lần; đổi lớp không gọi API hoặc đổi kết luận EMA. RSI/ADX/ATR có thang đo riêng nên không vẽ chung lên trục giá.
+Hai mươi hai thẻ nằm trong mục **Hướng theo phương pháp**, mở sẵn và chia thành bốn cụm: xu hướng/cấu trúc, động lượng, dòng tiền/khối lượng và biến động. Mỗi thẻ chỉ hiển thị tên và tag tăng/giảm/chưa rõ; công thức, quy tắc và giới hạn được giữ trong tài liệu này. Biểu đồ vẫn chỉ vẽ giá đóng và EMA20–50–100 để tránh quá tải.
 
 Các phương pháp có thể mâu thuẫn và không phải các phiếu độc lập: nhiều công thức dùng lại cùng giá đóng. Không tổng hợp số phương pháp cùng chiều thành độ tin cậy, xác suất thắng hoặc tín hiệu thay thế. Lỗi/cũ dữ liệu, đổi coin/khung đều xóa phần bổ sung cùng kết quả chính.
 
 ## Kiểm chứng
 
-Có các bộ dữ liệu đáp án tính tay: Wilder RMA, RSI, ATR, DI/ADX, Bollinger, Donchian, VWAP, SMA/Stochastic, Supertrend, Ichimoku, CCI, MACD và Momentum. Kiểm tra cả chuỗi tăng/giảm/phẳng, nến mở, thiếu mẫu, volume 0, dải phẳng, phản hồi sai thứ tự, và kết luận EMA không thay đổi khi bật lớp bổ sung.
+Có các bộ dữ liệu đáp án tính tay và chuỗi kỳ vọng cho Wilder RMA, RSI, ATR, DI/ADX, Bollinger, Donchian, VWAP, SMA/Stochastic, Supertrend, Ichimoku, CCI, MACD, Momentum, Aroon, ROC, Williams %R, MFI, OBV, Chaikin, AO, Stochastic RSI, Bull Bear Power và Ultimate Oscillator. Kiểm tra cả chuỗi tăng/giảm/phẳng, nến mở, thiếu mẫu, volume 0, dải phẳng, phản hồi sai thứ tự và việc kết luận EMA không thay đổi.
 
 Các kiểm thử này xác minh cách tính/hiển thị, không chứng minh hiệu quả chiến lược. Chưa có backtest hoặc tự động giao dịch.

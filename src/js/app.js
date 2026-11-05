@@ -33,8 +33,9 @@ function clearCurrent(){
   $('verdict').textContent='Thiếu dữ liệu';$('verdict').className='';$('direction').textContent='Hướng quan sát: —';$('direction').className='direction';$('signalicon').textContent='—';$('signalicon').className='signalicon';
   $('explanation').textContent='Cần dữ liệu hợp lệ để đánh giá.';$('reference').hidden=true;$('reference').replaceChildren();
   $('indicator-balance').hidden=true;['long-bar','neutral-bar','short-bar'].forEach(id=>$(id).style.width='0%');
-  ['conditions','ema-values','multi'].forEach(id=>{const el=$(id);if(el)el.replaceChildren();});$('chart').replaceChildren();$('methods').textContent='Chưa có dữ liệu';
-  $('comparison').textContent='Chưa có dữ liệu';if($('supplement'))$('supplement').textContent='Chưa có dữ liệu';$('range').textContent='120 nến gần nhất';
+  $('timeframe-confluence').hidden=true;$('confluence-frames').replaceChildren();$('confluence-state').textContent='— Chưa rõ';$('confluence-state').className='status miss';
+  ['conditions','ema-values'].forEach(id=>$(id).replaceChildren());$('chart').replaceChildren();$('methods').textContent='Chưa có dữ liệu';
+  $('comparison').textContent='Chưa có dữ liệu';$('range').textContent='120 nến gần nhất';
 }
 function draw(data){
   chartData=data;const narrow=window.innerWidth<=650,edge=narrow?400:780;
@@ -83,18 +84,37 @@ function renderMethods(data,extra,ema){
   $('long-percent').textContent=longPct+'%';$('short-percent').textContent=shortPct+'%';$('long-count').textContent=long+' trên '+total;$('short-count').textContent=short+' trên '+total;$('neutral-count').textContent='Chưa rõ · '+neutral+'/'+total+' · '+neutralPct+'%';
   balance.classList.toggle('long-leading',long>short);balance.classList.toggle('short-leading',short>long);balance.setAttribute('aria-label','Phân bổ '+longPct+'% Long, '+shortPct+'% Short, '+neutralPct+'% chưa rõ trên '+total+' góc nhìn');
   $('long-bar').style.width=longPct+'%';$('short-bar').style.width=shortPct+'%';$('neutral-bar').style.width=neutralPct+'%';
-  $('methods').replaceChildren(...cards.map(card=>{
-    const article=node('article',undefined,'method-card'),heading=node('div',undefined,'method-heading');
-    const direction=card.direction===1?'↗ Xu hướng tăng':card.direction===-1?'↘ Xu hướng giảm':'— Chưa rõ';
-    heading.append(node('h3',card.title),node('span',direction,'method-state '+(card.direction===1?'bull':card.direction===-1?'bear':'miss')));
-    article.dataset.method=card.id;article.append(heading);return article;
-  }));
+  const groups=Object.entries(CoinMethods.GROUPS).map(([key,label])=>{
+    const items=cards.filter(card=>card.group===key),section=node('section',undefined,'method-group'),head=node('div',undefined,'method-group-head'),grid=node('div',undefined,'methods-grid');
+    head.append(node('h3',label),node('span',items.length+' phương pháp'));
+    grid.append(...items.map(card=>{
+      const article=node('article',undefined,'method-card'),heading=node('div',undefined,'method-heading');
+      const direction=card.direction===1?'↗ Xu hướng tăng':card.direction===-1?'↘ Xu hướng giảm':'— Chưa rõ';
+      heading.append(node('h3',card.title),node('span',direction,'method-state '+(card.direction===1?'bull':card.direction===-1?'bear':'miss')));
+      article.dataset.method=card.id;article.append(heading);return article;
+    }));section.append(head,grid);return section;
+  });
+  $('methods').replaceChildren(...groups);
 }
 function emaTrendItem(title,direction){
   const el=node('article',undefined,'condition'),head=node('div',undefined,'condition-head');
   const label=direction===1?'↗ Xu hướng tăng':direction===-1?'↘ Xu hướng giảm':'— Chưa rõ';
   head.append(node('h3',title),node('span',label,'status '+(direction===1?'bull':direction===-1?'bear':'miss')));
   el.append(head);$('conditions').append(el);
+}
+function renderConfluence(results){
+  const trendLabel=value=>value===1?'Tăng':value===-1?'Giảm':'Chưa rõ';
+  const frames=C.TRADE_FRAMES.map(tf=>{
+    const item=results[C.DATA_FRAMES.indexOf(tf)];if(item.status!=='fulfilled')return {tf,direction:0,error:true,long:0,short:0,total:0};
+    const data=item.value,cards=CoinMethods.summarize(data.rows,CoinMethods.calculate(data.rows)),directions=cards.map(card=>card.direction),long=directions.filter(v=>v===1).length,short=directions.filter(v=>v===-1).length,methodDirection=Math.sign(long-short),ema=C.trendAt(data,data.rows.length-1).direction;
+    return {tf,long,short,total:cards.length,ema,direction:ema!==0&&ema===methodDirection?ema:0,error:false};
+  });
+  const long=frames.filter(v=>v.direction===1).length,short=frames.filter(v=>v.direction===-1).length,direction=long>=2?1:short>=2?-1:0,state=$('confluence-state');
+  state.textContent=direction===1?'↗ '+long+'/3 khung tăng':direction===-1?'↘ '+short+'/3 khung giảm':'— Chưa đồng thuận';state.className='status '+(direction===1?'bull':direction===-1?'bear':'miss');
+  $('confluence-frames').replaceChildren(...frames.map(item=>{
+    const card=node('article',undefined,'confluence-card'+(item.tf===frame?' current':'')),head=node('div');head.append(node('strong',C.LABELS[item.tf]),node('span',trendLabel(item.direction),'status '+(item.direction===1?'bull':item.direction===-1?'bear':'miss')));
+    card.append(head,node('small',item.error?'Thiếu dữ liệu':'EMA '+trendLabel(item.ema)+' · PP '+item.long+'↑ '+item.short+'↓ / '+item.total));return card;
+  }));$('timeframe-confluence').hidden=false;
 }
 function render(data,comparison,result,snapshot,results){
   const i=data.rows.length-1,r=data.rows[i],d=result.direction;
@@ -108,17 +128,8 @@ function render(data,comparison,result,snapshot,results){
   ['01 · Thứ tự EMA','02 · Độ dốc 3 nến','03 · EMA đồng hướng','04 · Hồi theo EMA','05 · Nến xác nhận','06 · Khung lớn'].forEach((title,index)=>emaTrendItem(title,ema[index]));
   const tf=C.HIGHER[frame];
   $('comparison').textContent=(frame==='1d'?'4h tham khảo: ':C.LABELS[frame]+' → '+C.LABELS[tf]+': ')+(comparison?dir(result.other.direction)+(result.aligned?' · Cùng hướng.':' · Chưa đồng hướng.'):'Không tải được; không xác nhận.')+(frame==='1d'?' Không có xác nhận từ khung lớn hơn.':'');
-  if($('multi')){
-    $('multi').replaceChildren();C.DATA_FRAMES.forEach((f,j)=>{
-      const item=results[j],card=node('div',undefined,'multicard');card.append(node('strong',C.LABELS[f]+(f==='4h'?' · Chỉ đối chiếu':'')));
-      if(item.status==='fulfilled'){
-        const v=item.value,t=C.trendAt(v,v.rows.length-1);card.append(node('span',dir(t.direction)),node('small',v.rows.length+' nến đóng'),node('small',date(v.rows.at(-1).closeTime)));
-      }else card.append(node('span','Thiếu dữ liệu'),node('small',item.reason.message));
-      $('multi').append(card);
-    });
-  }
-  if($('supplement'))$('supplement').replaceChildren(node('p','Volume nến cuối: '+fmt(r.volume)+' · '+(data.volumeRatio===null?'Không đủ cơ sở so sánh':data.volumeRatio.toFixed(2)+'× trung bình 20 nến trước')));
   $('updated').textContent='Cập nhật: '+date(Date.now())+' · Máy chủ Binance: '+date(snapshot.serverTime)+' · '+data.rows.length+' nến đã đóng';
+  renderConfluence(results);
   draw(data);
 }
 function quote(result,kind,snapshot){

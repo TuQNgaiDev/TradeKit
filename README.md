@@ -12,7 +12,9 @@ Mở http://localhost:8080. Tải lại trang nếu trình duyệt còn giữ ph
 
 ## Giao diện tinh gọn
 
-Thanh chọn coin và M15/M30/H1 ở đầu trang, mặc định SOLUSDT/M30. Màn hình chính tập trung vào biểu đồ, giá đóng, ba EMA và tín hiệu kèm kết quả đối chiếu. Trên điện thoại, tín hiệu nằm trước biểu đồ. Thẻ tín hiệu hiển thị tỷ lệ Long/Short/Chưa rõ trên tổng 18 góc nhìn gồm 12 phương pháp và 6 mục EMA; đây là phân bổ hướng, không phải xác suất thắng và không đổi kết luận EMA. Khối phương pháp luôn giữ đủ 12 phương pháp; mỗi ô chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`. ATR luôn `Chưa rõ` vì không chỉ hướng. Khối EMA giữ 6 góc nhìn với cùng ba trạng thái. Giao diện được tối giản tinh gọn, tập trung vào dữ liệu phân tích trực quan và chính xác.
+Thanh chọn coin và M15/M30/H1 ở đầu trang, mặc định SOLUSDT/M30. Màn hình chính tập trung vào biểu đồ, giá đóng, ba EMA và tín hiệu kèm kết quả đối chiếu. Trên điện thoại, tín hiệu nằm trước biểu đồ. Thẻ tín hiệu hiển thị tỷ lệ Long/Short/Chưa rõ trên tổng 28 góc nhìn gồm 22 phương pháp và 6 mục EMA; đây là phân bổ hướng, không phải xác suất thắng và không đổi kết luận EMA. Các phương pháp được chia thành 4 cụm: xu hướng/cấu trúc, động lượng, dòng tiền/khối lượng và biến động. Mỗi ô chỉ hiện `Xu hướng tăng`, `Xu hướng giảm` hoặc `Chưa rõ`; ATR luôn `Chưa rõ` vì không chỉ hướng.
+
+Khối **Đồng thuận 3 khung** dùng M15, M30 và H1 đã đóng. Một khung chỉ có hướng khi EMA20–50–100/độ dốc của khung đó cùng phía với đa số 22 phương pháp. Kết quả chung cần ít nhất 2/3 khung cùng hướng; 3/3 được ghi rõ. Đây chỉ là bộ lọc bổ trợ và không thay thế điều kiện xác nhận EMA/khung lớn của tín hiệu chính.
 
 ## Cấu trúc thư mục
 
@@ -28,15 +30,15 @@ TradeKit/
 │   └── js/
 │       ├── core.js         # Thuật toán EMA, kiểm tra/loại nến mở, quy tắc tín hiệu thuần
 │       ├── api.js          # API Futures công khai, timeout, cache, giới hạn yêu cầu
-│       ├── methods.js      # 12 phương pháp kỹ thuật (RSI, ADX, Bollinger, Ichimoku,...)
+│       ├── methods.js      # 22 phương pháp kỹ thuật, phân thành 4 cụm
 │       └── app.js          # Kết nối dữ liệu với giao diện, biểu đồ SVG, làm mới, lưu trữ
 │
 ├── docs/                   # Tài liệu kỹ thuật chi tiết
-│   └── ANALYSIS.md         # Công thức, seed, tài liệu tham khảo và giới hạn 12 phương pháp
+│   └── ANALYSIS.md         # Công thức, seed, tài liệu tham khảo và giới hạn 22 phương pháp
 │
 └── tests/                  # Bộ kiểm thử mô phỏng và kiểm tra kết nối
     ├── index.html          # Test runner kiểm thử mô phỏng trên trình duyệt
-    ├── unit.js             # 44 ca kiểm thử thuật toán và API client thuần
+    ├── unit.js             # 46 ca kiểm thử thuật toán và API client thuần
     ├── browser.py          # Kiểm thử trình duyệt tự động qua Playwright
     └── live_api.py         # Kiểm tra kết nối trực tiếp đến Binance Futures API
 ```
@@ -100,7 +102,7 @@ Xác nhận chỉ mô tả nến t, không được mang sang nến kế tiếp 
 
 ## Phương pháp bổ sung
 
-Đã tính **RSI, ADX/DMI, Bollinger, Donchian, VWAP, ATR, Supertrend, Ichimoku, Stochastic, CCI, MACD và Momentum**. Giao diện tổng quan giữ đủ 12 phương pháp và quy về ba trạng thái tăng/giảm/chưa rõ; công thức và giới hạn được ghi tại `docs/ANALYSIS.md`. Biểu đồ tập trung trực quan vào giá đóng nến và bộ 3 đường EMA20–50–100 sắc nét. Không thêm request API.
+Đã tính **RSI, ADX/DMI, Bollinger, Donchian, VWAP, ATR, Supertrend, Ichimoku, Stochastic, CCI, MACD, Momentum, Aroon, ROC, Williams %R, MFI, OBV, Chaikin Oscillator, Awesome Oscillator, Stochastic RSI, Bull Bear Power và Ultimate Oscillator**. Giao diện giữ đủ 22 phương pháp trong 4 khối và quy về ba trạng thái tăng/giảm/chưa rõ; công thức và giới hạn được ghi tại `docs/ANALYSIS.md`. Không thêm request API vì lớp đa khung tái sử dụng M15/M30/H1 vốn đã tải.
 
 Các phương pháp dùng cùng nến đã đóng, không cộng điểm hoặc thay đổi xác nhận EMA. Xem [ANALYSIS.md](docs/ANALYSIS.md) để đọc đầy đủ công thức và các tài liệu TradingView chính thức đã đối chiếu.
 
@@ -114,6 +116,7 @@ Các phương pháp dùng cùng nến đã đóng, không cộng điểm hoặc 
 - Một khung phụ lỗi không làm mất biểu đồ khung chính; khung đối chiếu bắt buộc lỗi thì không xác nhận. Giá ticker/Mark lỗi không được thay bằng close, và không làm thay đổi EMA.
 - Giữ watchlist hiện có tại `cl-watch`; thêm/xóa coin, tối đa 12. Coin được thêm sau khi đã kiểm tra exchangeInfo và tải hợp lệ. Mục theo dõi cũ vẫn phải được xác thực mỗi lần phân tích.
 - Nhật ký mới tại `cl-futures-ema-v2-history`, tối đa 20 mục. Không đọc/ghi đè/xóa nhật ký Spot tại `cl-history`. Lưu localStorage từng trình duyệt, không đồng bộ thiết bị. Khi lưu bị chặn/đầy, báo lỗi và vẫn dùng RAM trong phiên.
+- Giao diện chỉ giữ lịch sử dưới dạng mục thu gọn. Các khối “Xu hướng đa khung”, “Khối lượng” và “Công thức & quy tắc” riêng đã được bỏ vì kết quả khung lớn đã nằm trong thẻ tín hiệu, volume không quyết định tín hiệu, còn công thức đầy đủ nằm trong tài liệu này và `docs/ANALYSIS.md`.
 
 ## Kiểm tra lại
 

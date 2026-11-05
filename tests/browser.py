@@ -4,6 +4,7 @@ from playwright.async_api import async_playwright
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 BASE='http://localhost:8080'
 async def main():
+ (ROOT/'qa').mkdir(exist_ok=True)
  report={'checked_at_local':time.strftime('%Y-%m-%d %H:%M:%S %Z'),'direct_browser':{},'simulated_browser':{},'errors':[]}
  async with async_playwright() as p:
   browser=await p.chromium.launch()
@@ -78,8 +79,10 @@ async def main():
   assert await page.locator('#chart polyline').count()==4
   report['simulated_browser']['long_and_open_candle']=True
   # Primary supplemental overview and signal conditions start expanded.
-  assert await page.locator('.disclosures > details').count()==2
+  assert await page.locator('.disclosures > details').count()==3
   assert await page.locator('.disclosures > details[open]').count()==2
+  assert await page.locator('#frames-panel,#supplement-panel,#rules-panel').count()==0
+  assert await page.locator('#history-panel').count()==1
   assert await page.locator('#methods-panel').get_attribute('open') is not None
   assert await page.locator('#conditions-panel').get_attribute('open') is not None
   assert await page.locator('#conditions').is_visible()
@@ -106,15 +109,19 @@ async def main():
   assert not await page.locator('#conditions').is_visible()
   await page.keyboard.press('Enter')
   assert await page.locator('#conditions').is_visible()
-  for section in ['methods','conditions']:
+  for section in ['methods','conditions','history']:
    await page.locator(f'#{section}-panel summary').click()
    await page.locator(f'#{section}-panel summary').click()
   report['simulated_browser']['compact_disclosures_and_keyboard']=True
-  assert await page.locator('.method-card').count()==12
+  assert await page.locator('.method-group').count()==4
+  assert await page.locator('.method-card').count()==22
   balance=await page.locator('#indicator-balance').evaluate('(e)=>({total:Number(e.dataset.total),long:Number(e.dataset.long),short:Number(e.dataset.short),neutral:Number(e.dataset.neutral)})')
-  assert balance['total']==18 and balance['long']+balance['short']+balance['neutral']==18
-  assert await page.locator('#long-percent').inner_text()==f"{round(balance['long']/18*100)}%"
-  assert await page.locator('#short-percent').inner_text()==f"{round(balance['short']/18*100)}%"
+  assert balance['total']==28 and balance['long']+balance['short']+balance['neutral']==28
+  assert await page.locator('#long-percent').inner_text()==f"{round(balance['long']/28*100)}%"
+  assert await page.locator('#short-percent').inner_text()==f"{round(balance['short']/28*100)}%"
+  assert await page.locator('#timeframe-confluence').is_visible()
+  assert await page.locator('.confluence-card').count()==3
+  assert '3/3 khung tăng' in await page.locator('#confluence-state').inner_text()
   compact_height=await page.locator('.method-card').first.bounding_box()
   assert compact_height['height']<=100
   states=await page.locator('.method-state').all_text_contents()
@@ -123,7 +130,8 @@ async def main():
   assert await page.locator('[data-method="atr"] .method-state').text_content()=='— Chưa rõ'
   original_verdict=await page.locator('#verdict').inner_text()
   assert await page.locator('#chart polyline').count()==4
-  report['simulated_browser']['twelve_method_directions_and_chart_overlays']=True
+  report['simulated_browser']['twenty_two_methods_in_four_groups']=True
+  report['simulated_browser']['m15_m30_h1_confluence']=True
   report['simulated_browser']['overlays_keep_ema_signal_and_make_no_requests']=True
   report['simulated_browser']['vwap_does_not_connect_utc_sessions']=True
 
@@ -190,6 +198,8 @@ async def main():
   assert 'SOLUSDT' in await page.evaluate("JSON.parse(localStorage.getItem('cl-watch'))")
   assert await page.evaluate("JSON.parse(localStorage.getItem('cl-history'))[0].symbol")=='OLDUSDT'
   assert await page.evaluate("JSON.parse(localStorage.getItem('cl-futures-ema-v2-history'))[0].symbol")=='SOLUSDT'
+  await page.locator('#history-panel summary').click()
+  assert 'SOLUSDT' in await page.locator('#history').inner_text()
   report['simulated_browser']['storage_and_legacy_isolation']=True
   await page.reload()
   await page.wait_for_function("document.getElementById('connection').textContent.includes('Đã cập nhật')")

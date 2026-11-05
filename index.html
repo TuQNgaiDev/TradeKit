@@ -49,14 +49,19 @@
       <p id="direction" class="direction">Hướng quan sát: —</p>
       <h2 id="verdict">Chờ dữ liệu</h2>
       <p id="explanation" class="muted">Kết luận xuất hiện khi có dữ liệu hợp lệ.</p>
-      <section id="indicator-balance" class="indicator-balance" aria-label="Phân bổ hướng của 12 phương pháp và 6 góc nhìn EMA" hidden>
-        <div class="balance-head"><div><strong>Phân bổ xu hướng</strong><small>12 phương pháp + 6 EMA</small></div><span class="balance-total">18 tổng</span></div>
+      <section id="indicator-balance" class="indicator-balance" aria-label="Phân bổ hướng của 22 phương pháp và 6 góc nhìn EMA" hidden>
+        <div class="balance-head"><div><strong>Phân bổ xu hướng</strong><small>22 phương pháp + 6 EMA</small></div><span class="balance-total">28 tổng</span></div>
         <div class="balance-values">
-          <div class="balance-side long-side"><span><i class="balance-dot long-dot"></i>Long</span><strong id="long-percent">0%</strong><small id="long-count">0 trên 18</small></div>
-          <div class="balance-side short-side"><span><i class="balance-dot short-dot"></i>Short</span><strong id="short-percent">0%</strong><small id="short-count">0 trên 18</small></div>
+          <div class="balance-side long-side"><span><i class="balance-dot long-dot"></i>Long</span><strong id="long-percent">0%</strong><small id="long-count">0 trên 28</small></div>
+          <div class="balance-side short-side"><span><i class="balance-dot short-dot"></i>Short</span><strong id="short-percent">0%</strong><small id="short-count">0 trên 28</small></div>
         </div>
         <div class="balance-bar" aria-hidden="true"><span id="long-bar"></span><span id="neutral-bar"></span><span id="short-bar"></span></div>
-        <div class="balance-foot"><span id="neutral-count">Chưa rõ · 18/18</span><small>Không phải xác suất thắng</small></div>
+        <div class="balance-foot"><span id="neutral-count">Chưa rõ · 28/28</span><small>Không phải xác suất thắng</small></div>
+      </section>
+      <section id="timeframe-confluence" class="timeframe-confluence" aria-label="Đồng thuận M15 M30 H1" hidden>
+        <div class="confluence-head"><div><strong>Đồng thuận 3 khung</strong><small>EMA cùng phía đa số phương pháp</small></div><span id="confluence-state" class="status miss">— Chưa rõ</span></div>
+        <div id="confluence-frames" class="confluence-frames"></div>
+        <p class="fine">Bộ lọc bổ trợ, không thay thế xác nhận EMA và không phải xác suất thắng.</p>
       </section>
       <div id="reference" class="reference" hidden></div>
       <div class="comparison-brief"><span class="fieldlabel">Đối chiếu khung lớn</span><p id="comparison">Chưa có dữ liệu</p></div>
@@ -66,12 +71,16 @@
 
   <section class="disclosures" aria-label="Chi tiết phân tích">
     <details class="panel disclosure methods-panel" id="methods-panel" open>
-      <summary><span>Hướng theo phương pháp<small>12 phương pháp · tăng, giảm hoặc chưa rõ</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
-      <div id="methods" class="methods-grid">Chưa có dữ liệu</div>
+      <summary><span>Hướng theo phương pháp<small>22 phương pháp · chia theo 4 nhóm phân tích</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+      <div id="methods" class="method-groups">Chưa có dữ liệu</div>
     </details>
     <details class="panel disclosure conditions-panel" id="conditions-panel" open>
       <summary><span>Xu hướng EMA<small>6 góc nhìn · chỉ hiển thị tăng, giảm hoặc chưa rõ</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
       <div id="conditions" class="conditiongrid"></div>
+    </details>
+    <details class="panel disclosure history-panel" id="history-panel">
+      <summary><span>Lịch sử quan sát<small>Futures/EMA · lưu riêng trên trình duyệt này</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+      <div id="history">Chưa có lịch sử Futures/EMA.</div>
     </details>
   </section>
   <footer><span>© TuQNgaiDev - Công cụ chỉ hỗ trợ phân tích thị trường không nên áp dụng để vào lệnh !</span></footer>

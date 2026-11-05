@@ -134,11 +134,25 @@ async function runTests(){
     near(a.rsi.at(-1),b.rsi.at(-1));near(a.atr.at(-1),b.atr.at(-1));near(a.vwap.values.at(-1),b.vwap.values.at(-1));
     const before=M.calculate(rows.slice(0,499));near(b.rsi[498],before.rsi.at(-1));near(b.bb.upper[498],before.bb.upper.at(-1));
   });
-  await test('12 thẻ có quy tắc/nguồn, ATR không chỉ hướng; không đổi EMA',()=>{
+  await test('22 thẻ thuộc 4 nhóm có quy tắc/nguồn; ATR không chỉ hướng; không đổi EMA',()=>{
     const d=pulled(),before=C.evaluate(d,d,'30m').status,extra=M.calculate(d.rows),cards=M.summarize(d.rows,extra);
-    assert(cards.length===12&&new Set(cards.map(c=>c.id)).size===12);assert(cards.every(c=>c.rule&&c.limit&&c.source.startsWith('https://www.tradingview.com/')));
+    assert(cards.length===22&&new Set(cards.map(c=>c.id)).size===22&&new Set(cards.map(c=>c.group)).size===4);assert(cards.every(c=>c.rule&&c.limit&&c.source.startsWith('https://www.tradingview.com/')));
     assert(cards.find(c=>c.id==='atr').direction===0);d.methods=extra;assert(C.evaluate(d,d,'30m').status===before);
     assert(cards.find(c=>c.id==='rsi').state==='Quá mua'&&cards.find(c=>c.id==='rsi').direction===1);
+  });
+  await test('Aroon, ROC, Williams %R, MFI, OBV và Chaikin có kết quả xác định',()=>{
+    const up=fixture(),down=fixture(-1),u=M.calculate(up),d=M.calculate(down);
+    near(u.aroon.up.at(-1),100);near(u.aroon.down.at(-1),0);near(d.aroon.up.at(-1),0);near(d.aroon.down.at(-1),100);
+    assert(u.roc.at(-1)>0&&d.roc.at(-1)<0&&u.williams.at(-1)>-20&&d.williams.at(-1)<-80);
+    near(u.mfi.at(-1),100);near(d.mfi.at(-1),0);assert(u.obv.at(-1)>0&&d.obv.at(-1)<0);
+    assert(Number.isFinite(u.chaikin.at(-1))&&Number.isFinite(d.chaikin.at(-1)));
+  });
+  await test('AO, Stochastic RSI, Bull Bear Power và Ultimate có seed và giá trị hữu hạn',()=>{
+    const rows=fixture(),d=M.calculate(rows),flat=fixture(0),f=M.calculate(flat);
+    assert(d.awesome[32]===null&&Number.isFinite(d.awesome[33]));
+    assert(d.stochrsi.k.slice(0,29).every(v=>v===null)&&Number.isFinite(d.stochrsi.k.at(-1))&&Number.isFinite(d.stochrsi.d.at(-1)));
+    assert(d.bullbear.baseline[11]===null&&Number.isFinite(d.bullbear.baseline[12])&&Number.isFinite(d.bullbear.bull.at(-1)));
+    assert(d.ultimate[26]===null&&Number.isFinite(d.ultimate[27]));near(f.ultimate.at(-1),50);
   });
   await test('Thiếu mẫu chỉ báo mới trả null thay vì giá trị bịa',()=>{
     const rows=fixture().slice(0,2),d=M.calculate(rows);assert(d.rsi.at(-1)===null&&d.adx.at(-1)===null&&d.atr.at(-1)===null&&d.channel.upper.at(-1)===null);

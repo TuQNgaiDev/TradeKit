@@ -14,8 +14,20 @@ const SOURCES={
   stochastic:'https://www.tradingview.com/support/solutions/43000502332-stochastic-stoch/',
   cci:'https://www.tradingview.com/support/solutions/43000502001-commodity-channel-index-cci/',
   macd:'https://www.tradingview.com/support/solutions/43000502344-macd-moving-average-convergence-divergence/',
-  momentum:'https://www.tradingview.com/support/solutions/43000614331-technical-ratings/'
+  momentum:'https://www.tradingview.com/support/solutions/43000614331-technical-ratings/',
+  aroon:'https://www.tradingview.com/support/solutions/43000501801-aroon-indicator/',
+  roc:'https://www.tradingview.com/support/solutions/43000502343-rate-of-change-roc/',
+  williams:'https://www.tradingview.com/support/solutions/43000501985-williams-r-r/',
+  mfi:'https://www.tradingview.com/support/solutions/43000502348-money-flow-mfi/',
+  obv:'https://www.tradingview.com/support/solutions/43000502593-on-balance-volume-obv/',
+  chaikin:'https://www.tradingview.com/support/solutions/43000501979-chaikin-oscillator/',
+  awesome:'https://www.tradingview.com/support/solutions/43000614331-technical-ratings/',
+  stochrsi:'https://www.tradingview.com/support/solutions/43000614331-technical-ratings/',
+  bullbear:'https://www.tradingview.com/support/solutions/43000717955-bull-bear-power/',
+  ultimate:'https://www.tradingview.com/support/solutions/43000502328-ultimate-oscillator-uo/'
 };
+const GROUPS={trend:'Xu hướng & cấu trúc',momentum:'Động lượng',volume:'Dòng tiền & khối lượng',volatility:'Biến động'};
+const METHOD_GROUP={adx:'trend',channel:'trend',supertrend:'trend',ichimoku:'trend',aroon:'trend',bullbear:'trend',rsi:'momentum',stochastic:'momentum',cci:'momentum',macd:'momentum',momentum:'momentum',roc:'momentum',williams:'momentum',awesome:'momentum',stochrsi:'momentum',ultimate:'momentum',vwap:'volume',mfi:'volume',obv:'volume',chaikin:'volume',bb:'volatility',atr:'volatility'};
 // Wilder: SMA seed of N consecutive finite samples; alpha = 1/N thereafter.
 function rma(values,period){
   if(!Number.isInteger(period)||period<1)throw Error('Chu kỳ Wilder không hợp lệ');
@@ -125,9 +137,41 @@ function macd(closes){
   const fast=emaSeries(closes,12),slow=emaSeries(closes,26),line=closes.map((_,i)=>Number.isFinite(slow[i])?fast[i]-slow[i]:null),signal=emaSeries(line,9);return {line,signal};
 }
 function momentum(closes,period=10){return closes.map((v,i)=>i<period?null:v-closes[i-period]);}
+function aroon(rows,period=14){
+  const up=Array(rows.length).fill(null),down=Array(rows.length).fill(null);
+  for(let i=period-1;i<rows.length;i++){
+    const window=rows.slice(i-period+1,i+1),highs=window.map(r=>r.high),lows=window.map(r=>r.low);
+    up[i]=100*highs.lastIndexOf(Math.max(...highs))/(period-1);down[i]=100*lows.lastIndexOf(Math.min(...lows))/(period-1);
+  }return {up,down};
+}
+function roc(closes,period=9){return closes.map((v,i)=>i<period||closes[i-period]===0?null:100*(v-closes[i-period])/closes[i-period]);}
+function williams(rows,period=14){return rows.map((r,i)=>{if(i<period-1)return null;const w=rows.slice(i-period+1,i+1),hi=Math.max(...w.map(x=>x.high)),lo=Math.min(...w.map(x=>x.low));return hi===lo?-50:-100*(hi-r.close)/(hi-lo);});}
+function mfi(rows,period=14){
+  const tp=rows.map(r=>(r.high+r.low+r.close)/3),flow=rows.map((r,i)=>tp[i]*r.volume),out=Array(rows.length).fill(null);
+  for(let i=period;i<rows.length;i++){
+    let positive=0,negative=0;for(let j=i-period+1;j<=i;j++){if(tp[j]>tp[j-1])positive+=flow[j];else if(tp[j]<tp[j-1])negative+=flow[j];}
+    out[i]=negative===0?positive>0?100:50:100-100/(1+positive/negative);
+  }return out;
+}
+function obv(rows){const out=[0];for(let i=1;i<rows.length;i++)out.push(out[i-1]+Math.sign(rows[i].close-rows[i-1].close)*rows[i].volume);return out;}
+function chaikin(rows){
+  let adl=0;const line=rows.map(r=>{const range=r.high-r.low,multiplier=range===0?0:((r.close-r.low)-(r.high-r.close))/range;return adl+=multiplier*r.volume;});
+  const fast=emaSeries(line,3),slow=emaSeries(line,10);return line.map((_,i)=>Number.isFinite(slow[i])?fast[i]-slow[i]:null);
+}
+function awesome(rows){const median=rows.map(r=>(r.high+r.low)/2),fast=sma(median,5),slow=sma(median,34);return rows.map((_,i)=>Number.isFinite(slow[i])?fast[i]-slow[i]:null);}
+function stochasticRsi(closes,rsiPeriod=14,stochPeriod=14,smoothK=3,smoothD=3){
+  const base=rsi(closes,rsiPeriod),raw=base.map((v,i)=>{if(i<rsiPeriod+stochPeriod-1||!Number.isFinite(v))return null;const w=base.slice(i-stochPeriod+1,i+1);if(!w.every(Number.isFinite))return null;const hi=Math.max(...w),lo=Math.min(...w);return hi===lo?50:100*(v-lo)/(hi-lo);});
+  const k=sma(raw,smoothK),d=sma(k,smoothD);return {raw,k,d};
+}
+function bullBear(rows,period=13){const baseline=emaSeries(rows.map(r=>r.close),period),bull=rows.map((r,i)=>Number.isFinite(baseline[i])?r.high-baseline[i]:null),bear=rows.map((r,i)=>Number.isFinite(baseline[i])?r.low-baseline[i]:null);return {baseline,bull,bear};}
+function ultimate(rows){
+  const bp=[],tr=[],out=Array(rows.length).fill(null);rows.forEach((r,i)=>{const prior=i?rows[i-1].close:r.close,low=Math.min(r.low,prior),high=Math.max(r.high,prior);bp.push(r.close-low);tr.push(high-low);});
+  const ratio=(i,n)=>{const trSum=tr.slice(i-n+1,i+1).reduce((a,b)=>a+b,0);return trSum?bp.slice(i-n+1,i+1).reduce((a,b)=>a+b,0)/trSum:.5;};
+  for(let i=27;i<rows.length;i++){const a=ratio(i,7),b=ratio(i,14),c=ratio(i,28);if([a,b,c].every(Number.isFinite))out[i]=100*(4*a+2*b+c)/7;}return out;
+}
 function calculate(rows){
   const closes=rows.map(r=>r.close);
-  return {rsi:rsi(closes),...directional(rows),bb:bollinger(closes),channel:donchian(rows),vwap:sessionVWAP(rows),supertrend:supertrend(rows),ichimoku:ichimoku(rows),stochastic:stochastic(rows),cci:cci(rows),macd:macd(closes),momentum:momentum(closes)};
+  return {rsi:rsi(closes),...directional(rows),bb:bollinger(closes),channel:donchian(rows),vwap:sessionVWAP(rows),supertrend:supertrend(rows),ichimoku:ichimoku(rows),stochastic:stochastic(rows),cci:cci(rows),macd:macd(closes),momentum:momentum(closes),aroon:aroon(rows),roc:roc(closes),williams:williams(rows),mfi:mfi(rows),obv:obv(rows),chaikin:chaikin(rows),awesome:awesome(rows),stochrsi:stochasticRsi(closes),bullbear:bullBear(rows),ultimate:ultimate(rows)};
 }
 const average=a=>a.length&&a.every(Number.isFinite)?a.reduce((s,v)=>s+v,0)/a.length:null;
 const number=v=>Number.isFinite(v)?v.toLocaleString('en-US',{maximumFractionDigits:Math.abs(v)<1?4:2}):'—';
@@ -135,7 +179,7 @@ function summarize(rows,data){
   const i=rows.length-1,r=rows[i],cards=[];
   if(!r)return cards;
   function add(id,title,state,direction,metrics,meaning,rule,limit){
-    cards.push({id,title,state,direction,metrics,meaning,rule,limit,source:SOURCES[id]});
+    cards.push({id,title,state,direction,group:METHOD_GROUP[id],metrics,meaning,rule,limit,source:SOURCES[id]});
   }
   const rv=data.rsi[i];
   add('rsi','RSI · Động lượng',rv===null?'Thiếu dữ liệu':rv>=70?'Quá mua':rv<=30?'Quá bán':rv>50?'Động lượng tăng':rv<50?'Động lượng giảm':'Cân bằng',rv===null?0:Math.sign(rv-50),
@@ -184,7 +228,27 @@ function summarize(rows,data){
   add('macd','MACD · 12–26–9',macdDir>0?'MACD trên tín hiệu':macdDir<0?'MACD dưới tín hiệu':'Chưa rõ',macdDir,[['MACD / Signal',number(ml)+' / '+number(ms)]],'So động lượng EMA nhanh và chậm.','MACD > signal là tăng; MACD < signal là giảm.','Chỉ báo trễ và dễ nhiễu khi đi ngang.');
   const mo=data.momentum[i],prevMo=data.momentum[i-1],moDir=!Number.isFinite(mo)||!Number.isFinite(prevMo)?0:Math.sign(mo-prevMo);
   add('momentum','Momentum · Chu kỳ 10',moDir>0?'Động lượng tăng':moDir<0?'Động lượng giảm':'Chưa rõ',moDir,[['Momentum(10)',number(mo)]],'So giá đóng với 10 nến trước và hướng thay đổi của chênh lệch.','Theo Technical Ratings: momentum hiện tại cao hơn trước là tăng, thấp hơn là giảm.','Phản ứng nhanh nhưng có thể đổi hướng thường xuyên.');
+  const au=data.aroon.up[i],ad=data.aroon.down[i],aroonDir=!Number.isFinite(au)||!Number.isFinite(ad)?0:au>50&&ad<50?1:ad>50&&au<50?-1:0;
+  add('aroon','Aroon · Chu kỳ 14',aroonDir===1?'Đỉnh mới gần hơn':aroonDir===-1?'Đáy mới gần hơn':'Chưa rõ',aroonDir,[['Up / Down',number(au)+' / '+number(ad)]],'Đo độ gần của đỉnh và đáy mới nhất trong cửa sổ 14 nến.','Tăng khi Aroon Up > 50 và Down < 50; giảm khi ngược lại.','Nhạy với đỉnh/đáy mới và có thể đổi nhanh trong vùng nhiễu.');
+  const rc=data.roc[i],rocDir=Number.isFinite(rc)?Math.sign(rc):0;
+  add('roc','ROC · Chu kỳ 9',rocDir>0?'Giá cao hơn 9 nến trước':rocDir<0?'Giá thấp hơn 9 nến trước':'Chưa rõ',rocDir,[['ROC(9)',number(rc)+'%']],'Đo phần trăm thay đổi giá đóng so với 9 nến trước.','ROC = (Close / Close[t−9] − 1) × 100; dấu quanh 0 xác định hướng.','Không có biên cố định và có thể phản ứng mạnh với điểm so sánh cũ.');
+  const wr=data.williams[i],prevWr=data.williams[i-1],wrDir=!Number.isFinite(wr)||!Number.isFinite(prevWr)?0:wr<-80&&wr>prevWr?1:wr>-20&&wr<prevWr?-1:0;
+  add('williams','Williams %R · Chu kỳ 14',wrDir>0?'Hồi lên khỏi vùng thấp':wrDir<0?'Quay xuống từ vùng cao':'Chưa rõ',wrDir,[['Williams %R',number(wr)]],'Đặt giá đóng trong biên cao–thấp 14 nến.','Theo Technical Ratings: tăng khi %R < −80 và đi lên; giảm khi %R > −20 và đi xuống.','Quá mua/quá bán có thể kéo dài trong xu hướng mạnh.');
+  const mf=data.mfi[i],mfiDir=Number.isFinite(mf)?Math.sign(mf-50):0;
+  add('mfi','MFI · Dòng tiền 14',mf===null?'Thiếu dữ liệu':mf>50?'Áp lực mua trội':mf<50?'Áp lực bán trội':'Cân bằng',mfiDir,[['MFI(14)',number(mf)]],'Kết hợp typical price và volume để ước lượng áp lực mua/bán.','Tổng raw money flow dương/âm 14 nến → tỷ lệ → MFI; mốc 50 phân hướng.','Volume nến Futures là dữ liệu tổng hợp; MFI không tự chứng minh dòng tiền thực vào/ra.');
+  const ov=data.obv[i],obvDir=i>=3?Math.sign(ov-data.obv[i-3]):0;
+  add('obv','OBV · Áp lực khối lượng',obvDir>0?'OBV tăng 3 nến':obvDir<0?'OBV giảm 3 nến':'Chưa rõ',obvDir,[['OBV / chênh 3 nến',number(ov)+' / '+number(i>=3?ov-data.obv[i-3]:null)]],'Cộng volume khi giá đóng tăng và trừ khi giảm.','Hướng dựa trên OBV hiện tại so với 3 nến trước.','Giá trị tuyệt đối phụ thuộc điểm bắt đầu; chỉ dùng độ thay đổi.');
+  const co=data.chaikin[i],chaikinDir=Number.isFinite(co)?Math.sign(co):0;
+  add('chaikin','Chaikin Oscillator · 3–10',chaikinDir>0?'Áp lực mua trội':chaikinDir<0?'Áp lực bán trội':'Chưa rõ',chaikinDir,[['Chaikin Oscillator',number(co)]],'Đo động lượng của Accumulation/Distribution bằng chênh EMA.','Money Flow Volume tích lũy thành ADL; Chaikin = EMA3(ADL) − EMA10(ADL).','Có thể nhiễu khi volume hoặc vị trí đóng trong nến biến động bất thường.');
+  const ao=data.awesome,aoNow=ao[i],aoPrev=ao[i-1],aoOld=ao[i-2],aoDir=!Number.isFinite(aoOld)?0:(aoPrev<=0&&aoNow>0)||(aoNow>0&&aoPrev>0&&aoNow>aoPrev&&aoPrev<aoOld)?1:(aoPrev>=0&&aoNow<0)||(aoNow<0&&aoPrev<0&&aoNow<aoPrev&&aoPrev>aoOld)?-1:0;
+  add('awesome','Awesome Oscillator · 5–34',aoDir>0?'Động lượng tăng mới':aoDir<0?'Động lượng giảm mới':'Chưa rõ',aoDir,[['AO',number(aoNow)]],'So SMA5 và SMA34 của giá trung vị High–Low.','Theo Technical Ratings: giao qua 0 hoặc hai nến cùng phía rồi quay lại theo hướng đó.','Chỉ phát hướng ở điểm giao hoặc điểm quay; phần lớn thời gian có thể trung tính.');
+  const sr=data.stochrsi,sk=sr.k[i],srd=sr.d[i],ema13=data.bullbear.baseline,emaTrend=Number.isFinite(ema13[i-1])?Math.sign(ema13[i]-ema13[i-1]):0,stochRsiDir=!Number.isFinite(sk)||!Number.isFinite(srd)?0:emaTrend<0&&sk<20&&srd<20&&sk>srd?1:emaTrend>0&&sk>80&&srd>80&&sk<srd?-1:0;
+  add('stochrsi','Stochastic RSI · 3–3–14–14',stochRsiDir>0?'Hồi tăng vùng thấp':stochRsiDir<0?'Quay giảm vùng cao':'Chưa rõ',stochRsiDir,[['%K / %D',number(sk)+' / '+number(srd)]],'Đặt RSI14 vào biên RSI 14 nến rồi làm mượt K3 và D3.','Theo Technical Ratings: tín hiệu vùng cực trị phải đi cùng điều kiện xu hướng EMA13.','Nhạy hơn RSI nên dễ tạo nhiễu; vùng cực trị không tự đồng nghĩa đảo chiều.');
+  const bbp=data.bullbear,bull=bbp.bull[i],bear=bbp.bear[i],bullBearDir=!Number.isFinite(bull)||!Number.isFinite(bear)||i<1?0:emaTrend>0&&bear<0&&bear>bbp.bear[i-1]?1:emaTrend<0&&bull>0&&bull<bbp.bull[i-1]?-1:0;
+  add('bullbear','Bull Bear Power · EMA13',bullBearDir>0?'Bear Power đang cải thiện':bullBearDir<0?'Bull Power đang suy yếu':'Chưa rõ',bullBearDir,[['Bull / Bear',number(bull)+' / '+number(bear)]],'Đo High và Low lệch khỏi EMA13 để đọc sức mua/bán.','Theo Technical Ratings: hướng EMA13, dấu của Bull/Bear Power và thay đổi so với nến trước phải đồng thuận.','Phụ thuộc biên High–Low và có thể trung tính trong phần lớn xu hướng.');
+  const uo=data.ultimate[i],ultimateDir=!Number.isFinite(uo)?0:uo>70?1:uo<30?-1:0;
+  add('ultimate','Ultimate Oscillator · 7–14–28',ultimateDir>0?'Áp lực mua mạnh':ultimateDir<0?'Áp lực mua yếu':'Chưa rõ',ultimateDir,[['UO',number(uo)]],'Gộp buying pressure trên ba cửa sổ với trọng số 4–2–1.','Theo Technical Ratings: UO >70 là tăng, UO <30 là giảm, còn lại trung tính.','Ngưỡng cực trị hiếm và không thay thế phân tích phân kỳ đầy đủ.');
   return cards;
 }
-root.CoinMethods={SOURCES,rma,rsi,directional,bollinger,donchian,sessionVWAP,sma,supertrend,ichimoku,stochastic,cci,macd,momentum,calculate,summarize};
+root.CoinMethods={SOURCES,GROUPS,rma,rsi,directional,bollinger,donchian,sessionVWAP,sma,supertrend,ichimoku,stochastic,cci,macd,momentum,aroon,roc,williams,mfi,obv,chaikin,awesome,stochasticRsi,bullBear,ultimate,calculate,summarize};
 })(globalThis);
